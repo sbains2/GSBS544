@@ -1,0 +1,81 @@
+Titanic Wrangling
+In this practice activity you'll continue to work with the titanic dataset in ways that flex what you've learned about both data wrangling and data visualization.
+
+
+```{python}
+import pandas as pd
+df = pd.read_csv('/Users/sahilbains/Downloads/CalPoly/GSB544/Assignments/Assignment2/titanic.csv')
+df.info()
+```
+
+1. Filter the data to include passengers only. Calculate the joint distribution (cross-tab) between a passenger's class and where they embarked.
+
+```{python}
+# Subsetting for passengers in different classes
+passengers = df[df['class'].isin(['1st', '2nd', '3rd'])]
+
+# Creating dummy variables for embarked column and joining to original passengers df
+passengers.join(pd.get_dummies(passengers['embarked']))
+
+# Dropping NAs from passengers
+passengers = passengers.dropna(subset=['embarked'])
+
+# Calculating joint distributions between class and embarked columns relative to each row
+count = pd.crosstab(passengers['class'], passengers['embarked'], normalize='index')
+print(count)
+```
+
+2. Using the joint distribution that calculated above, calculate the following:
+the conditional distribution of their class given where they embarked
+the conditional distribution of where they embarked given their class
+Use the conditional distributions that you calculate to answer the following quesitons:
+
+What proportion of 3rd class passengers embarked at Southampton?
+What proportion of Southampton passengers were in 3rd class?
+
+
+```{python}
+# Conditional distribution of class given embark
+cd_ce = pd.crosstab(passengers['class'], passengers['embarked'], normalize='columns')
+
+# Conditional distribution of embark given class
+cd_ec = pd.crosstab(passengers['class'], passengers['embarked'], normalize='index')
+
+# Printing results
+print('conditional distribution of class given embarked: ', cd_ce)
+print('conditional distribution of embarked given class: ', cd_ec)
+
+# Proportion of 3rd class passengers embarked at Southhampton
+prop_third_s = cd_ce.loc['3rd', 'S']
+print(prop_third_s)
+
+# Proportion of Southhampton passengers that were in 3rd class
+prop_s_third = cd_ec.loc['3rd', 'S']
+print(prop_s_third)
+```
+The proportion of 3rd class passengers that embarked from Southhampton was 54.05%
+The proportion of Southhampton passengers that were in 3rd class was 69.68%
+
+3. Make a visualization showing the distribution of a passenger's class, given where they embarked.
+Discuss the pros and cons of using this visualization versus the distributions you calculated before, to answer the previous questions.
+
+
+```{python}
+from plotnine import *
+# Reshaping the data to long format in order to plot
+plot = cd_ce.reset_index().melt(
+    id_vars='class',
+    var_name='embarked',
+    value_name='proportion'
+)
+
+# Plotting
+(
+    ggplot(plot, aes(x='embarked', y='proportion', fill='class'))
+    + geom_col(position='stack')
+)
+
+```
+Some of the pros of using this visualization over the distribution is that it is very intuitive to see the distribution of passenger classes over the embarked locations. By extension, you're able to see the relative size of proportions.
+
+Some of the cons of using this visualization over the distribution is that it is less precise, you're not able to see the exact values. By extension, you cannot see the differences in the values as well as the raw numbers.
