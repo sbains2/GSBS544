@@ -1,0 +1,124 @@
+---
+Title: GSBS544 Lab 2
+author: Sahil Bains
+format:
+    html
+---
+
+## Data Set-up
+0.
+```{python}
+import pandas as pd
+import numpy as np
+from plotnine import *
+
+df = pd.read_csv('avocado.csv')
+df.head()
+```
+
+1. This dataset contains prices and sales volumes of avocados from the years 2015-2020. The different features of the dataset include average price, total volume (sales), different PLU (price look up codes) corresponds with the specific produce characteristics associated with the avocado. PLU 4046 is classified as small/medium hass avocado (3-5 oz), 4225 are large hass avocado(8-10 oz), and 4770 are extra large hass avocados. Along with this, the are small bags, large bags, and large bags associated with each observation. Finally, there is a year associated associated with each record.
+
+2. Cleaning the dataset
+```{python}
+df = df.dropna()
+df = df.rename(columns={'4046': 'smid', '4225': 'large', '4770': 'xlarge', 'average_price': 'avg_price', 'total_volume': 'volume'})
+
+df.info()
+```
+
+## Exercises
+
+3. Which major geographical region sold the most total organic, small Hass avocados in 2017?
+CHECK!!!!!!!!!!
+
+```{python}
+# Confirming that small hass avocados column is numeric data type
+df['smid'] = pd.to_numeric(df['smid'], errors='coerce')
+
+# Creating a mask for organic avocados in 2017 and regions
+regions = ['West', 'North', 'East', 'South', 'Northwest', 'Northeast', 'Southwest', 'Southeast', 'Midsouth']
+mask = df[(df['type'] == 'organic') & (df['year'] == 2017) & (df['geography'].isin(regions))]
+
+# Grouping by geography and small hass avocados, sorting the values to see highest at the top
+volume_region = mask.groupby('geography')['smid'].sum().sort_values(ascending=False)
+
+print(volume_region.sort_values(ascending=False))
+```
+The major geographical region that sold the most total organic, small Hass avocados in 2017 was West, with 1870206 sold.
+
+
+4. Split the date variable into month, day, and year variables. In which month is the highest average volume of avocado sales?
+
+```{python}
+df.dtypes
+```
+```{python}
+
+# Splitting the variable into month, day, and year
+df['month'] = df['date'].dt.month
+df['day'] = df['date'].dt.day
+df.head()
+
+# Finding which month is the highest average volume of avocado sales through Groupby()
+# Then finding the maximum sales volume and sorting the values based on highest volume
+volume_month = df.groupby('month')['volume'].max().sort_values(ascending=False)
+print(volume_month)
+```
+
+
+5. Which metro area geographical regions sold the most total avocados? Plot side-by-side box-plots of the total volume for only the five metro geographical regions with the highest averages for the total_volume variable.
+
+```{python}
+
+# Creating a mask for organic avocados in 2017 and regions
+regions = ['West', 'North', 'East', 'South', 'Northwest', 'Northeast', 'Southwest', 'Southeast']
+mask = df[(df['type'] == 'organic') & (df['year'] == 2017) & (~df['geography'].isin(regions))]
+
+# Grouping by geography and small hass avocados, sorting the values to see highest at the top
+volume_region = mask.groupby('geography')['smid'].sum().sort_values(ascending=False)
+
+print(volume_region.sort_values(ascending=False))
+
+```
+
+## Pivot
+The following four California geographical regions are in this data set: "Los Angeles", "San Diego", "Sacramento", and "San Francisco".
+
+6. From your cleaned data set, create a data set with only these California regions and answer the following questions about these California regions only.
+
+```{python}
+cali = ['Los Angeles', 'San Diego', 'San Francisco', 'Sacramento']
+df_cali = df[df['geography'].isin(cali)]
+```
+
+7. In which California regions is the price of organic versus conventional avocados most different? Support your answer with a few summary statistics AND a visualization.
+
+```{python}
+# Pivoting the table to run operations on types of avocados
+pivot = df_cali.pivot_table(index='geography', columns='type', values='avg_price', aggfunc='mean')
+
+# Creating 'diff' to find abs difference between conventional and organic
+pivot['diff'] = (pivot['organic'] - pivot['conventional']).abs()
+pivot = pivot.sort_values('diff', ascending=False)
+
+print(pivot[['conventional', 'organic', 'diff']])
+```
+The california region with the most difference in price of orgnanic versus conventional is San Francisco
+
+
+8. The following plot shows, for all four California regions, the proportion of the average Hass avocado sales that are small, large, or extra large; conventional vs. organic. Recreate the plot; you do not have to replicate the exact finishing touches - e.g., color, theme - but your plot should resemble the content of this plot.
+
+```{python}
+
+```
+
+
+## Using Outside Data
+
+A joke in the media is that Millennials can’t afford houses, because they spend all their money buying avocado toast. Let’s use this data set to address that claim.
+
+Find or assemble a data set of real data, with house prices for these four California regions. Join this data set with your California avocado data set.
+
+Use your new joined data set to make an argument about the relationship between house prices and avocado prices/sales.
+
+Support your argument with a plot.
