@@ -23,8 +23,6 @@ df.info()
 # Subsetting for passengers in different classes
 passengers = df[df['class'].isin(['1st', '2nd', '3rd'])]
 
-# Creating dummy variables for embarked column and joining to original passengers df
-passengers.join(pd.get_dummies(passengers['embarked']))
 
 # Dropping NAs from passengers
 passengers = passengers.dropna(subset=['embarked'])
@@ -42,26 +40,26 @@ What proportion of Southampton passengers were in 3rd class?
 
 
 ```{python}
-# Conditional distribution of class given embark
-cd_ce = pd.crosstab(passengers['class'], passengers['embarked'], normalize='columns')
-
 # Conditional distribution of embark given class
 cd_ec = pd.crosstab(passengers['class'], passengers['embarked'], normalize='index')
 
-# Printing results
-print('conditional distribution of class given embarked: ', cd_ce)
-print('conditional distribution of embarked given class: ', cd_ec)
+# Conditional distribution of class given embark
+cd_ce = pd.crosstab(passengers['class'], passengers['embarked'], normalize='columns')
 
-# Proportion of 3rd class passengers embarked at Southhampton
-prop_third_s = cd_ce.loc['3rd', 'S']
+# Printing results
+print('conditional distribution of embark given class: ', cd_ec)
+print('conditional distribution of class given embark: ', cd_ce)
+
+# Proportion of 3rd class passengers embarked at Southampton
+prop_third_s = cd_ec.loc['3rd', 'S']
 print(prop_third_s)
 
-# Proportion of Southhampton passengers that were in 3rd class
-prop_s_third = cd_ec.loc['3rd', 'S']
+# Proportion of Southampton passengers that were in 3rd class
+prop_s_third = cd_ce.loc['3rd', 'S']
 print(prop_s_third)
 ```
 
-The proportion of 3rd class passengers that embarked from Southhampton was 54.05%
+The proportion of 3rd class passengers that embarked from Southampton was 54.05%
 The proportion of Southhampton passengers that were in 3rd class was 69.68%
 
 3. Make a visualization showing the distribution of a passenger's class, given where they embarked.
