@@ -1,8 +1,11 @@
 ---
-Title: GSBS544 Lab 2
+title: GSBS544 Lab 2
 author: Sahil Bains
 format:
-    html
+  html:
+    embed-resources: true
+    code-fold: true
+echo: true
 ---
 
 ## Data Set-up
@@ -50,10 +53,7 @@ The major geographical region that sold the most total organic, small Hass avoca
 4. Split the date variable into month, day, and year variables. In which month is the highest average volume of avocado sales?
 
 ```{python}
-df.dtypes
-```
-```{python}
-
+df['date'] = pd.to_datetime(df['date'])
 # Splitting the variable into month, day, and year
 df['month'] = df['date'].dt.month
 df['day'] = df['date'].dt.day
@@ -75,10 +75,22 @@ regions = ['West', 'North', 'East', 'South', 'Northwest', 'Northeast', 'Southwes
 mask = df[(df['type'] == 'organic') & (df['year'] == 2017) & (~df['geography'].isin(regions))]
 
 # Grouping by geography and small hass avocados, sorting the values to see highest at the top
-volume_region = mask.groupby('geography')['smid'].sum().sort_values(ascending=False)
+volume_region = mask.groupby('geography')['smid'].mean().sort_values(ascending=False)
 
 print(volume_region.sort_values(ascending=False))
 
+# Selecting top 5 geos and formatting into list
+top_5 = volume_region[1:5].index.to_list()
+
+# Subsetting row level data from original mask 
+rows = mask[mask['geography'].isin(top_5)]
+
+
+p = ggplot(top_5, aes('geography', 'smid')
+    +geom_boxplot()
+)
+
+print(p)
 ```
 
 ## Pivot
@@ -97,7 +109,7 @@ df_cali = df[df['geography'].isin(cali)]
 # Pivoting the table to run operations on types of avocados
 pivot = df_cali.pivot_table(index='geography', columns='type', values='avg_price', aggfunc='mean')
 
-# Creating 'diff' to find abs difference between conventional and organic
+# Creating 'diff' to find absolute difference between conventional and organic
 pivot['diff'] = (pivot['organic'] - pivot['conventional']).abs()
 pivot = pivot.sort_values('diff', ascending=False)
 
