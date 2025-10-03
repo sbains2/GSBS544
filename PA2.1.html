@@ -2232,7 +2232,7 @@ vertical-align: -.125em;
 
 
 <p>Titanic Wrangling In this practice activity you’ll continue to work with the titanic dataset in ways that flex what you’ve learned about both data wrangling and data visualization.</p>
-<div id="4ce96a60" class="cell" data-execution_count="1">
+<div id="21b29ae1" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
@@ -2261,21 +2261,19 @@ memory usage: 155.3+ KB</code></pre>
 <ol type="1">
 <li>Filter the data to include passengers only. Calculate the joint distribution (cross-tab) between a passenger’s class and where they embarked.</li>
 </ol>
-<div id="9cf435a2" class="cell" data-execution_count="2">
+<div id="dae09f26" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Subsetting for passengers in different classes</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>passengers <span class="op">=</span> df[df[<span class="st">&#39;class&#39;</span>].isin([<span class="st">&#39;1st&#39;</span>, <span class="st">&#39;2nd&#39;</span>, <span class="st">&#39;3rd&#39;</span>])]</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Creating dummy variables for embarked column and joining to original passengers df</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>passengers.join(pd.get_dummies(passengers[<span class="st">&#39;embarked&#39;</span>]))</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Dropping NAs from passengers</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>passengers <span class="op">=</span> passengers.dropna(subset<span class="op">=</span>[<span class="st">&#39;embarked&#39;</span>])</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculating joint distributions between class and embarked columns relative to each row</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>count <span class="op">=</span> pd.crosstab(passengers[<span class="st">&#39;class&#39;</span>], passengers[<span class="st">&#39;embarked&#39;</span>], normalize<span class="op">=</span><span class="st">&#39;index&#39;</span>)</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(count)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Dropping NAs from passengers</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>passengers <span class="op">=</span> passengers.dropna(subset<span class="op">=</span>[<span class="st">&#39;embarked&#39;</span>])</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculating joint distributions between class and embarked columns relative to each row</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>count <span class="op">=</span> pd.crosstab(passengers[<span class="st">&#39;class&#39;</span>], passengers[<span class="st">&#39;embarked&#39;</span>], normalize<span class="op">=</span><span class="st">&#39;index&#39;</span>)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(count)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>embarked         B         C         Q         S
@@ -2289,47 +2287,47 @@ class
 <li>Using the joint distribution that calculated above, calculate the following: the conditional distribution of their class given where they embarked the conditional distribution of where they embarked given their class Use the conditional distributions that you calculate to answer the following quesitons:</li>
 </ol>
 <p>What proportion of 3rd class passengers embarked at Southampton? What proportion of Southampton passengers were in 3rd class?</p>
-<div id="135e35d3" class="cell" data-execution_count="3">
+<div id="7bc17b5d" class="cell" data-execution_count="3">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Conditional distribution of class given embark</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>cd_ce <span class="op">=</span> pd.crosstab(passengers[<span class="st">&#39;class&#39;</span>], passengers[<span class="st">&#39;embarked&#39;</span>], normalize<span class="op">=</span><span class="st">&#39;columns&#39;</span>)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Conditional distribution of embark given class</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>cd_ec <span class="op">=</span> pd.crosstab(passengers[<span class="st">&#39;class&#39;</span>], passengers[<span class="st">&#39;embarked&#39;</span>], normalize<span class="op">=</span><span class="st">&#39;index&#39;</span>)</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Conditional distribution of embark given class</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>cd_ec <span class="op">=</span> pd.crosstab(passengers[<span class="st">&#39;class&#39;</span>], passengers[<span class="st">&#39;embarked&#39;</span>], normalize<span class="op">=</span><span class="st">&#39;index&#39;</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Conditional distribution of class given embark</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>cd_ce <span class="op">=</span> pd.crosstab(passengers[<span class="st">&#39;class&#39;</span>], passengers[<span class="st">&#39;embarked&#39;</span>], normalize<span class="op">=</span><span class="st">&#39;columns&#39;</span>)</span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Printing results</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&#39;conditional distribution of class given embarked: &#39;</span>, cd_ce)</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&#39;conditional distribution of embarked given class: &#39;</span>, cd_ec)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&#39;conditional distribution of embark given class: &#39;</span>, cd_ec)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&#39;conditional distribution of class given embark: &#39;</span>, cd_ce)</span>
 <span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Proportion of 3rd class passengers embarked at Southhampton</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>prop_third_s <span class="op">=</span> cd_ce.loc[<span class="st">&#39;3rd&#39;</span>, <span class="st">&#39;S&#39;</span>]</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Proportion of 3rd class passengers embarked at Southampton</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>prop_third_s <span class="op">=</span> cd_ec.loc[<span class="st">&#39;3rd&#39;</span>, <span class="st">&#39;S&#39;</span>]</span>
 <span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(prop_third_s)</span>
 <span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Proportion of Southhampton passengers that were in 3rd class</span></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>prop_s_third <span class="op">=</span> cd_ec.loc[<span class="st">&#39;3rd&#39;</span>, <span class="st">&#39;S&#39;</span>]</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Proportion of Southampton passengers that were in 3rd class</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>prop_s_third <span class="op">=</span> cd_ce.loc[<span class="st">&#39;3rd&#39;</span>, <span class="st">&#39;S&#39;</span>]</span>
 <span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(prop_s_third)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>conditional distribution of class given embarked:  embarked         B         C         Q         S
-class                                           
-1st       0.333333  0.527675  0.024390  0.191466
-2nd       0.666667  0.095941  0.056911  0.268053
-3rd       0.000000  0.376384  0.918699  0.540481
-conditional distribution of embarked given class:  embarked         B         C         Q         S
+<pre><code>conditional distribution of embark given class:  embarked         B         C         Q         S
 class                                           
 1st       0.009259  0.441358  0.009259  0.540123
 2nd       0.021127  0.091549  0.024648  0.862676
 3rd       0.000000  0.143865  0.159379  0.696756
-0.5404814004376368
-0.6967559943582511</code></pre>
+conditional distribution of class given embark:  embarked         B         C         Q         S
+class                                           
+1st       0.333333  0.527675  0.024390  0.191466
+2nd       0.666667  0.095941  0.056911  0.268053
+3rd       0.000000  0.376384  0.918699  0.540481
+0.6967559943582511
+0.5404814004376368</code></pre>
 </div>
 </div>
-<p>The proportion of 3rd class passengers that embarked from Southhampton was 54.05% The proportion of Southhampton passengers that were in 3rd class was 69.68%</p>
+<p>The proportion of 3rd class passengers that embarked from Southampton was 54.05% The proportion of Southhampton passengers that were in 3rd class was 69.68%</p>
 <ol start="3" type="1">
 <li>Make a visualization showing the distribution of a passenger’s class, given where they embarked. Discuss the pros and cons of using this visualization versus the distributions you calculated before, to answer the previous questions.</li>
 </ol>
-<div id="cdafa246" class="cell" data-execution_count="4">
+<div id="e9d2baa3" class="cell" data-execution_count="4">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> plotnine <span class="im">import</span> <span class="op">*</span></span>
