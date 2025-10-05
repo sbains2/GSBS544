@@ -38,7 +38,7 @@ df.info()
 df['smid'] = pd.to_numeric(df['smid'], errors='coerce')
 
 # Creating a mask for organic avocados in 2017 and regions
-regions = ['West', 'North', 'East', 'South', 'Northwest', 'Northeast', 'Southwest', 'Southeast', 'Midsouth', 'Great Lakes', 'Plains']
+regions = ['West', 'North', 'East', 'South', 'Northwest', 'Northeast', 'Southwest', 'Southeast', 'Midsouth', 'Great Lakes', 'Plains', 'California']
 
 mask = df[(df['type'] == 'organic') & (df['year'] == 2017) & (df['geography'].isin(regions))]
 
@@ -62,7 +62,7 @@ df.head()
 
 # Finding which month is the highest average volume of avocado sales through Groupby()
 # Then finding the maximum sales volume and sorting the values based on highest volume
-volume_month = df.groupby('month')['volume'].max().sort_values(ascending=False)
+volume_month = df.groupby('month')['volume'].mean().sort_values(ascending=False)
 print(volume_month)
 ```
 May is the month with the highest average volume of avocado sales, amounting to ~ $637,161,44.15. 
@@ -73,7 +73,7 @@ May is the month with the highest average volume of avocado sales, amounting to 
 ```{python}
 
 # Creating a mask for organic avocados in 2017 and regions
-regions = ['West', 'North', 'East', 'South', 'Northwest', 'Northeast', 'Southwest', 'Southeast', 'Midsouth', 'Great Lakes', 'Plains', 'Total U.S.']
+regions = ['West', 'North', 'East', 'South', 'Northwest', 'Northeast', 'Southwest', 'Southeast', 'Midsouth', 'Great Lakes', 'Plains', 'Total U.S.', 'California', 'South Central']
 metro = df[~df['geography'].isin(regions)]
 
 # Grouping by geography and small hass avocados, sorting the values to see highest at the top
@@ -82,7 +82,7 @@ volume_region = metro.groupby('geography')['volume'].mean().sort_values(ascendin
 print(volume_region.sort_values(ascending=False))
 
 # Selecting top 5 geos and formatting into list
-top_5 = volume_region[1:6].index.tolist()
+top_5 = volume_region[:5].index.tolist()
 
 # Subsetting row level data from original mask 
 rows = metro[metro['geography'].isin(top_5)]
@@ -208,7 +208,6 @@ housing_formatted = (housing.groupby(['geography', 'year'])['hpi'].mean().reset_
 
 # Merging with avocado california dataframe
 avo_house = df_cali.merge(housing_formatted, left_on=['geography', 'year'], right_on=['geography', 'year'])
-avo_house['geography'].unique()
 
 # Plotting avocado sales with housing price index
 (
