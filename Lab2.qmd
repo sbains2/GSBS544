@@ -7,6 +7,7 @@ format:
     code-fold: true
 echo: true
 ---
+Github Link: https://github.com/sbains2/GSBS544
 
 ## Data Set-up
 0.
