@@ -140,7 +140,7 @@ In understanding some of the summary statistics of California regions and the pr
 ```{python}
 
 # Defining sizes to pass in groupby
-sizes = ['smid', 'large', 'xlarge']
+sizes = ['xlarge', 'large', 'smid']
 
 # Defining prices to aggregate prices by size and type
 prices = df_cali.groupby(['geography', 'type'])[sizes].mean().reset_index()
@@ -154,11 +154,14 @@ result = formatted.groupby(['geography', 'type'])['avg_sales'].sum().reset_index
 # Merging the results back and finding the proportion based on average sales and total
 formatted = formatted.merge(result, on=['geography', 'type'])
 formatted['proportion'] = formatted['avg_sales']/formatted['sum']
+formatted['size'] = pd.Categorical(formatted['size'], categories=['smid', 'large', 'xlarge'], ordered=True)
+
+print(formatted)
 
 # Plotting proportion of average Hass avocado sales by size and type
 (
   ggplot(formatted, aes(x='geography', y='proportion', fill='size'))
-  + geom_bar(stat='identity')
+  + geom_bar(stat='identity', position=position_stack(reverse=True)) # Flipping the axes so that the xlarge size is on top
   + facet_wrap('~type') # Plotting all types
   + labs(x='Region of California', y='Proportion', title='Proportion of Average Hass Avocado Sales by Size')
   + theme(axis_text_x = element_text(angle = 45)) # Rotating x labels by 45 degrees for more room
