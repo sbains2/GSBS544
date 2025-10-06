@@ -146,14 +146,14 @@ sizes = ['xlarge', 'large', 'smid']
 prices = df_cali.groupby(['geography', 'type'])[sizes].mean().reset_index()
 
 # Converting wide dataframe to long through melt()
-formatted = prices.melt(id_vars=['geography', 'type'], var_name='size', value_name='avg_sales')
+formatted = prices.melt(id_vars=['geography', 'type'], var_name='size', value_name='avg_price')
 
 # Calculating total by geography and type
-result = formatted.groupby(['geography', 'type'])['avg_sales'].sum().reset_index(name='sum')
+result = formatted.groupby(['geography', 'type'])['avg_price'].sum().reset_index(name='sum')
 
 # Merging the results back and finding the proportion based on average sales and total
 formatted = formatted.merge(result, on=['geography', 'type'])
-formatted['proportion'] = formatted['avg_sales']/formatted['sum']
+formatted['proportion'] = formatted['avg_price']/formatted['sum']
 formatted['size'] = pd.Categorical(formatted['size'], categories=['smid', 'large', 'xlarge'], ordered=True)
 
 print(formatted)
