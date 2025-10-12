@@ -2254,7 +2254,7 @@ var requirejs,require,define;(function(global,setTimeout){var req,s,head,baseEle
 <p>Twelve Drummers Drumming Eleven Pipers Piping Ten Lords a Leaping Nine Ladies Waiting Eight Maids a Milking Seven Swans a Swimming Six Geese a Laying Five Golden Rings Four Calling Birds Three French Hens Two Turtle Doves And a Partridge in a Pear Tree This week, your task will be to write functions that automatically sing this very repetitive song.</p>
 <p>Data set Run the code provided to load in a data set called xmas that contains the crucial information about the gifts in the song. We will use this data set to test out our functions as we work on them.</p>
 <p>Data loading</p>
-<div id="4334b292" class="cell" data-execution_count="1">
+<div id="537d439a" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reading in the data</span></span>
@@ -2262,7 +2262,7 @@ var requirejs,require,define;(function(global,setTimeout){var req,s,head,baseEle
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>xmas <span class="op">=</span> pd.read_csv(<span class="st">&quot;xmas.csv&quot;</span>)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>xmas.head()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="1">
+<div class="cell-output cell-output-display" data-execution_count="9">
 <div>
 
 
@@ -2331,7 +2331,7 @@ var requirejs,require,define;(function(global,setTimeout){var req,s,head,baseEle
 </div>
 </div>
 <p>Writing the pluralize gift function Function 1:</p>
-<div id="7515a3d6" class="cell" data-execution_count="2">
+<div id="8eb20aae" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> pluralize_gift(gift):</span>
@@ -2366,7 +2366,7 @@ var requirejs,require,define;(function(global,setTimeout){var req,s,head,baseEle
 <span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>xmas[<span class="st">&#39;plural_gift&#39;</span>] <span class="op">=</span> xmas[<span class="st">&#39;Gift.Item&#39;</span>].<span class="bu">apply</span>(pluralize_gift)</span>
 <span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>xmas</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="2">
+<div class="cell-output cell-output-display" data-execution_count="10">
 <div>
 
 
@@ -2514,7 +2514,7 @@ var requirejs,require,define;(function(global,setTimeout){var req,s,head,baseEle
 <p>make_phrase(num_word = “ten”, item = “lords”, verb = “a-leaping”, adjective = ““, location =”“) should return</p>
 <p>“ten lords a-leaping”</p>
 <p>Function 2:</p>
-<div id="57119f05" class="cell" data-execution_count="3">
+<div id="0874f22c" class="cell" data-execution_count="3">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Making a helper function to normalize strings to apply across columns effectively</span></span>
@@ -2533,7 +2533,7 @@ var requirejs,require,define;(function(global,setTimeout){var req,s,head,baseEle
 <span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> string</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-<div id="2aa0d1fb" class="cell" data-execution_count="4">
+<div id="37d69a41" class="cell" data-execution_count="4">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_phrase(num, num_word, item, verb, adjective, location):</span>
@@ -2604,7 +2604,7 @@ var requirejs,require,define;(function(global,setTimeout){var req,s,head,baseEle
 <span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a>xmas</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="4">
+<div class="cell-output cell-output-display" data-execution_count="12">
 <div>
 
 
@@ -2755,7 +2755,7 @@ var requirejs,require,define;(function(global,setTimeout){var req,s,head,baseEle
 <p>For example,</p>
 <p>sing_day(xmas, 2, Full.Phrase) should return</p>
 <p>On the second day of Christmas, my true love sent to me: two turtle doves and a partridge in a pear tree.</p>
-<div id="8d377481" class="cell" data-execution_count="5">
+<div id="d0efc9d5" class="cell" data-execution_count="5">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># constructing cardinals for the lines (one...twelve)</span></span>
@@ -2778,7 +2778,7 @@ var requirejs,require,define;(function(global,setTimeout){var req,s,head,baseEle
 <span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-<div id="d80c4875" class="cell" data-execution_count="6">
+<div id="dac90cb3" class="cell" data-execution_count="6">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Defining ordinals for the intro line</span></span>
@@ -2839,7 +2839,7 @@ var requirejs,require,define;(function(global,setTimeout){var req,s,head,baseEle
 </details>
 </div>
 <p>Full scope</p>
-<div id="7c371c5b" class="cell" data-execution_count="7">
+<div id="328d0d5d" class="cell" data-execution_count="7">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Print example verse</span></span>
@@ -2959,7 +2959,7 @@ a partridge in a pear tree.</code></pre>
 </div>
 </div>
 <p>Loading in surprise dataset with same schema</p>
-<div id="6dc62cec" class="cell" data-execution_count="8">
+<div id="580c2085" class="cell" data-execution_count="8">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>xmas2 <span class="op">=</span> pd.read_csv(<span class="st">&quot;xmas2.csv&quot;</span>)</span>
