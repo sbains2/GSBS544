@@ -1,0 +1,293 @@
+---
+title: GSBS544 PA 4.1
+author: Sahil Bains
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+echo: true
+---
+
+
+
+JSON and XML are two different ways to represent hierarchical data. Which one is better? There are lots of articles online which discuss similarities and differences between JSON and XML and their advantages and disadvantages. Both formats are still in current usage, so it is good to be familiar with both. However, JSON is more common, so we'll focus on working with JSON representations of hierarchical data.
+
+The reading covered an example of using Beautiful Soup to parse XML. Rather than doing another example XML now, we'll skip straight to scraping HTML from a webpage. Both HTML and XML can be parsed in a similar way with Beautiful Soup.
+
+
+```{python}
+#| colab: {base_uri: https://localhost:8080/}
+pip install lxml
+```
+
+```{python}
+import pandas as pd
+from bs4 import BeautifulSoup
+```
+
+## Scraping an HTML table with Beautiful Soup
+
+Open the URL https://en.wikipedia.org/wiki/List_of_United_States_cities_by_population and scroll down until you see a table of the cities in the U.S. with population over 100,000 (as of Jul 1, 2022). We'll use Beautiful Soup to scrape information from this table.
+
+
+
+```
+# This is formatted as code
+```
+
+Read in the HTML from the ULR using the `requests` library.
+
+```{python}
+import requests
+
+url = "https://en.wikipedia.org/wiki/List_of_United_States_cities_by_population"
+
+headers = {"User-Agent": "Chrome (Sahil)"}
+```
+
+Use Beautiful Soup to parse this string into a tree called `soup`
+
+```{python}
+#| colab: {base_uri: https://localhost:8080/}
+# Getting HTML and building soup
+
+response = requests.get(url, headers=headers)
+soup = BeautifulSoup(response.content, "html.parser")
+print(soup.title)
+```
+
+```{python}
+#| colab: {base_uri: https://localhost:8080/}
+# Finding the specific table with 100,000 population
+table = soup.select_one("table", attrs={"class": "sortable wikitable sticky-header-multi static-row-numbers sort-under col1left col2center jquery-tablesorter"})
+
+print(table)
+```
+
+To find an HTML tag corresponding to a specific element on a webpage, right-click on it and choose "Inspect element". Go to the cities table Wikipedia page and do this now.
+
+You should find that the cities table on the Wikipedia page corresponds to the element
+
+```
+<table class="wikitable sortable jquery-tablesorter" style="text-align:center">
+```
+
+
+There are many `<table>` tags on the page.
+
+```{python}
+#| colab: {base_uri: https://localhost:8080/}
+len(soup.find_all("table"))
+```
+
+We can use attributes like `class=` and `style=` to narrow down the list.
+
+```{python}
+#| colab: {base_uri: https://localhost:8080/}
+len(soup.find_all("table",
+                  attrs={
+                      "class": "wikitable sortable",
+                      "style": "text-align:center"}
+                  ))
+```
+
+At this point, you can manually inspect the tables on the webpage to find that the one we want is the first one (see `[0]` below). We'll store this as `table`.
+
+
+
+**Now you will write code to scrape the information in `table` to create a Pandas data frame with one row for each city and columns for: city, state, population (2022 estimate), and 2020 land area (sq mi).** Refer to the Notes/suggestions below as you write your code. A few Hints are provided further down, but try coding first before looking at the hints.
+
+Notes/suggestions:
+
+- Use as a guide the code from the reading that produced the data frame of Statistics faculty
+- Inspect the page source as you write your code
+- You will need to write a loop to get the information for all cities, but you might want to try just scraping the info for New York first
+- You will need to pull the text from the tag. If `.text` returns text with "\n" at the end, try `.get_text(strip = True)` instead of `.text`
+- Don't forget to convert to a Pandas Data Frame; it should have 333 rows and 4 columns
+- The goal of this exercise is just to create the Data Frame. If you were going to use it --- e.g., what is the population density for all cities in CA? --- then you would need to clean the data first (to clean strings and convert to quantitative). (You can use Beautiful Soup to do some of the cleaning for you, but that goes beyond our scope.)
+
+
+```{python}
+#| colab: {base_uri: https://localhost:8080/}
+# YOUR CODE HERE. ADD AS MANY CELLS AS NEEDED
+
+# Setting up beautiful soup to extract information from wiki page
+
+import requests
+from io import StringIO
+
+url = "https://en.wikipedia.org/wiki/List_of_United_States_cities_by_population"
+
+headers = {"User-Agent": "Chrome (Sahil)"}
+
+response = requests.get(url, headers=headers)
+
+soup = BeautifulSoup(response.content, "html.parser")
+
+# Checking how many tables are in the page
+all_tables = soup.find_all('table')
+print('total tables found:', len(all_tables))
+
+# Finding tables that contain 'wikitable' and 'sortable'
+tables = soup.find_all('table', class_=['wikitable', 'sortable'])
+print('found', len(tables), 'wikitable sortable tables')
+
+# Grabbing the right table
+table = tables[1]
+
+```
+
+```{python}
+#| colab: {base_uri: https://localhost:8080/, height: 446}
+# Converting HTML to pandas df
+text = pd.read_html(StringIO(str(table)))[0]
+text.head()
+```
+
+
+```{python}
+#| colab: {base_uri: https://localhost:8080/, height: 424}
+# Iterating the table to pull values (CHECK)
+
+rows = []
+tbody = table.find('tbody') or table
+for tr in tbody.find_all('tr'):
+  tds = tr.find_all('td')
+
+  # fixing list index out of range error
+  if len(tds) < 6:
+    continue
+
+  city = tds[0].get_text(strip=True)
+  state = tds[1].get_text(strip=True)
+  # Pulling population for 2024 since there is no 2022
+  population = tds[2].get_text(strip=True)
+  area = tds[5].get_text(strip=True)
+
+  # Appending extracted data to dictionary
+  rows.append({
+      "city": city,
+      "state": state,
+      "population": population,
+      "land_area_sq_mi": area
+  })
+
+# Converting dictionary to list
+df = pd.DataFrame(rows)
+df
+```
+
+
+Hints:
+
+- Each city is a row in the table; find all the `<tr>` tags to find all the cities
+- Look for the `<td>` tag to see table entries within a row
+- The rank column is represented by `<th>` tags, rather than `<td>` tags. So within a row, the first (that is, `[0]`) `<td>` tag corresponds to the city name.
+
+## Aside: Scraping an HTML table with Pandas
+
+
+The Pandas command `read_html` can be used to scrape information from an HTML table on a webpage.
+
+We can call `read_html` on the URL.
+
+
+
+However, this scrapes all the tables on the webpage, not just the one we want. As with Beautiful Soup, we can narrow the search by specifying the table attributes.
+
+
+This still returns 3 tables. As we remarked above, the table that we want is the first one (see `[0]` below).
+
+
+Wait, that seemed much easier than using Beautiful Soup, and it returned a data frame, and we even got for free some formatting like removing the commas from the population! Why didn't we just use `read_html` in the first place? It's true the `read_html` works well when scraping information from an HTML *table*. Unfortunately, you often want to scrape information from a webpage that isn't conveniently stored in an HTML table, in which case `read_html` won't work. (It only searches for `<table>`, `<th>`, `<tr>`, and `<td>` tags, but there are many other HTML tags.) Though Beautiful Soup is not as simple as `read_html`, it is more flexible and thus more widely applicable.
+
+## Scraping information that is NOT in a `<table>` with Beautiful Soup
+
+The Cal Poly course catalog http://catalog.calpoly.edu/collegesandprograms/collegeofsciencemathematics/statistics/#courseinventory contains a list of courses offered by the Statistics department. **You will scrape this website to obtain a Pandas data frame with one row for each DATA or STAT course and two columns: course name and number (e.g, DATA 301. Introduction to Data Science) and term typically offered (e.g., Term Typically Offered: F, W, SP).**
+
+Note: Pandas `read_html` is not help here since the courses are not stored in a `<table>.`
+
+
+
+
+Notes/suggestions:
+
+
+- Inspect the page source as you write your code
+- The courses are not stored in a `<table>`. How are they stored?
+- You will need to write a loop to get the information for all courses, but you might want to try just scraping the info for DATA 100 first
+- What kind of tag is the course name stored in? What is the `class` of the tag?
+- What kind of tag is the quarter(s) the course is offered stored in? What is the `class` of the tag? Is this the only tag of this type with the class? How will you get the one you want?
+- You don't have to remove the number of units (e.g., 4 units) from the course name and number, but you can try it if you want
+- You will need to pull the text from the tag. If `.text` returns text with "\n" at the end, try `get_text(strip = True)` instead of `text`
+- Don't forget to convert to a Pandas Data Frame; it should have 74 rows and 2 columns
+- The goal of this exercise is just to create the Data Frame. If you were going to use it then you might need to clean the data first. (You can use Beautiful Soup to do some of the cleaning for you, but that goes beyond our scope.)
+
+
+```{python}
+# YOUR CODE HERE. ADD AS MANY CELLS AS NEEDED
+```
+
+```{python}
+#| colab: {base_uri: https://localhost:8080/}
+import requests
+from io import StringIO
+
+url = "https://catalog.calpoly.edu/collegesandprograms/collegeofsciencemathematics/statistics/#courseinventory"
+
+headers = {"User-Agent": "Chrome (Sahil)"}
+
+response = requests.get(url, headers=headers)
+
+soup = BeautifulSoup(response.content, "html.parser")
+
+# Checking how many courses are in the page
+all_courses = soup.find_all("div", {"class": "courseblock"})
+print('total courses found:', len(all_courses))
+
+```
+
+```{python}
+#| colab: {base_uri: https://localhost:8080/, height: 424}
+# Iterating the table to pull values
+
+rows = []
+# Iterating over each course block
+for item in all_courses:
+  # Retrieving title
+  title = item.find("p", class_="courseblocktitle")
+  if not title:
+    continue # skipping over the blocks that are missing a title
+  course_title = title.get_text(strip=True)
+
+  # defining empty term
+  term = ""
+
+  # finding all p-tags with 'term typically offered'
+  for p in item.find_all('p'):
+    if "Term Typically Offered" in p.get_text():
+      # Extracting text and clean everything before the colon
+      text= p.get_text(strip=True)
+      if "Term Typically Offered" in text:
+        term = text.split(":", 1)[-1].strip()
+      break # stop after finding the term
+
+  # Append the extracted data as a dictionary
+  rows.append({
+      "Course Name and Number": course_title,
+      "Course Term": term
+  })
+
+  # Conerting the list of dictionaries to pandas df
+  df = pd.DataFrame(rows)
+
+df
+```
+
+Hints:
+
+- Each course is represented by a `<div>` with `class=courseblock`, so you can find all the courses with `soup.find_all("div", {"class": "courseblock"})`
+- The course name is in a `<p>` tag with `class=courseblocktitle`, inside a `<strong>` tag. (Though I don't think we need to find the strong tag here.)
+- The term typically offered is in `<p>` tag with `class=noindent`. However, there are several tags with this class; term typically offered is the first one.
+- If you want to use Beautiful Soup to remove the course units (e.g., 4 units), find the `<span>` tag within the course name tag and `.extract()` this span tag
+

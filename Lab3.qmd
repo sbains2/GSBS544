@@ -176,7 +176,7 @@ def make_phrase(num, num_word, item, verb, adjective, location):
 
 
 # Unit test
-make_phrase(10, 'ten', 'lord', 'a-leaping', adjective = 'NA', location = 'NA')
+print(make_phrase(10, 'ten', 'lord', 'a-leaping', adjective = 'NA', location = 'NA'))
 
 xmas
 
