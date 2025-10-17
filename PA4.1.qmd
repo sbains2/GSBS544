@@ -243,7 +243,7 @@ soup = BeautifulSoup(response.content, "html.parser")
 
 # Checking how many courses are in the page
 courses_list = soup.find_all("div", {"class": "courseblock"})
-print('total courses found:', len(all_courses))
+print('total courses found:', len(courses_list))
 
 ```
 
