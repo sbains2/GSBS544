@@ -1,0 +1,218 @@
+---
+title: GSBS544 Lab 4
+author: Sahil Bains
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+echo: true
+---
+Github Link: https://github.com/sbains2/GSBS544
+
+1. Data from unstructured websites
+This website contains many weekly meal plans. Choose one that seems delicious to you. Scrape the weekly meal plan into a table with the following columns:
+
+1. Day of the Week
+2. Name of Recipe
+3. Link to Recipe
+4. Price of Recipe
+
+```{python}
+# Importing libraries
+import pandas as pd
+import numpy as np
+import re
+import bs4
+
+# Setting up soup
+url = "https://tastesbetterfromscratch.com/meal-plan-210/"
+
+headers = {"User-Agent": "Chrome (Sahil)"}
+
+response = requests.get(url, headers=headers)
+
+soup = BeautifulSoup(response.content, "html.parser")
+
+# Finding all p's
+ps = soup.find_all('p')
+
+# Creating empty lists for each column
+days = []
+recipes = []
+links = []
+prices = []
+
+# Looping through p tags and filtering for those that start with a day pattern
+for p in ps:
+    text = p.get_text()
+
+    # Only keeping lines that have ':' and '$'
+    if ':' in text and '$' in text:
+        # Splitting at the ':' to get the day and the rest of info
+        day, info = text.split(':', 1)
+        day = day.strip()
+
+        # Extract recipe name and price
+        recipe = info.split('$')[0].strip()
+        price = '$' + info.split('$')[-1].split()[0].strip()
+
+        # Extracting link
+        link_tag = p.find('a')
+        link = link_tag['href'] if link_tag else None
+
+        # Appending the results
+        days.append(day)
+        recipes.append(recipe)
+        links.append(link)
+        prices.append(price)
+
+
+# Framing in df
+plan = pd.DataFrame({
+    'Days of the week': days,
+    'Name of the recipe': recipes,
+    'Link to recipe': links,
+    'Price of the Recipe': prices
+})
+
+print(plan)
+
+
+```
+
+
+2. Data from an API
+Using the Tasty API from the practice activity, search for recipes that match the “Monday” recipe in your meal plan. Compile a table of all these recipes.
+
+(Warning - your free Tasty API account only allows 500 queries per month. You should not need more than this, but if you do end up with a recipe that has a large number of matches, you only need to scrape the first 100 of them.)
+
+Hint: You may need to use some text editing tricks to convert the recipe name into a searchable string. Not all recipe names will find a match on the Tasty API; that’s okay and you can leave these blank.
+
+```{python}
+
+# Setting up Tasty API requests
+import requests
+
+url = "https://tasty.p.rapidapi.com/recipes/list"
+
+querystring = {"from":"0","size":"20","tags":"under_30_minutes"}
+
+headers = {
+	"x-rapidapi-key": "a1f843d8f0msh79f993122eb68ecp1b45bajsn88d40dbd6eeb",
+	"x-rapidapi-host": "tasty.p.rapidapi.com"
+}
+
+response = requests.get(url, headers=headers, params=querystring)
+
+
+```
+
+```{python}
+# Pulling the Monday recipe from the 'plan' dataframe
+mondays = (
+    plan.loc[plan['Days of the week'].str.contains('mon', case=False, na=False),
+        'Name of the recipe']
+    .iloc[0]
+)
+
+print(mondays)
+```
+
+```{python}
+import re
+# Preparing searchable query string
+def search_query(s):
+    # keeping lowercase, numbers, and spaces. Removing whitespace
+    s = s.lower()
+    s = re.sub(r'[^a-z0-9\s]', ' ', s)
+    s = re.sub(r'\s+', ' ', s).strip()
+    return s
+
+query = search_query(mondays)
+print(query)
+```
+
+```{python}
+
+url = "https://tasty.p.rapidapi.com/recipes/list"
+headers = {
+	"x-rapidapi-key": "a1f843d8f0msh79f993122eb68ecp1b45bajsn88d40dbd6eeb",
+	"x-rapidapi-host": "tasty.p.rapidapi.com"
+}
+# Calling Tasty API
+def fetch_tasty(query, max_results = 100, batch = 20):
+    results = []
+    offset = 0
+    while offset < max_results:
+        size = min(batch, max_results - offset)
+        parameters = {'q': query, "from": str(offset), 'size': str(size)}
+        req = requests.get(url, headers=headers, params=parameters)
+        data = req.json()
+        items = data.get('results', [])
+        if not items:
+            break
+        results.extend(items)
+        offset += size
+    return results
+
+items = fetch_tasty(query, max_results=100, batch=20)
+print(items)
+
+```
+
+```{python}
+# Normalizing API JSON into a clean table
+
+def flatten(item):
+    sections = item.get('sections') or []
+    parts = []
+    for i in sections:
+        for component in i.get('components', []):
+            raw_string = component.get('raw_text')
+            if raw_string:
+                parts.append(raw_string)
+    return "; ".join(parts) if parts else None
+
+
+def to_row(item):
+    ratings = item.get('user_ratings') or {}
+    slug = item.get('slug')
+    return {
+        'tasty_id': item.get('id'),
+        'title': item.get('name'),
+        'description': item.get('description'),
+        'num_servings': item.get('num_servings'),
+        'total_time_minutes': item.get('total_time_minutes'),
+        'video_url': item.get('video_url'),
+        'recipe_url': f'https://tasty.p.rapidapi.com/recipes/{slug}' if slug else None,
+        'ingredients': flatten(item),
+    }
+
+rows = [to_row(x) for x in items]
+table = pd.DataFrame(rows)
+print(table)
+```
+
+3. Automate it
+Write a function called get_mealplan_data that performs 2 and 3 above automatically. That is, your function should:
+
+Take as input a number 100-210, representing which weekly meal plan you are referencing.
+
+Scrape the meal plan from the meal planning site.
+
+Query the Tasty API for recipes matching each of the ones in the chosen weekly meal plan.
+
+Output a single dataset, which contains all the information from the above
+
+Hint: You may have an easier time if you write two smaller functions, get_weekly_plan and match_recipe, and then you use them inside your main function.
+
+Run the following code, which should work if your function is complete:
+
+df = get_mealplan_data(202)
+4. Add a column with fuzzy matching
+Add a column to your df dataset indicating whether the recipe in that row is vegetarian or not.
+
+You may assume, for our purposes, that all recipes containing meat will have the name of a common meat in the recipe title. (Of course, that is not universally true - but we’ll assume it is for now.)
+
+6. Analyze
+Make a visualization that tells a story about nutrition information (available in the Tasty API results) across the week for Mealplan 202. Your visualization should also indicate which meals are vegetarian.
