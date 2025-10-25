@@ -149,7 +149,6 @@ mondays = (
 print(mondays)
 ```
 
-
 ```{python}
 api = "a1f843d8f0msh79f993122eb68ecp1b45bajsn88d40dbd6eeb"
 
@@ -298,7 +297,6 @@ def plot_meal_times(df):
     )
     return p
 ```
-
 
 ```{python}
 plot = plot_meal_times(df)
