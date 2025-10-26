@@ -12,6 +12,10 @@ Github Link: https://github.com/sbains2/GSBS544
 ### DEFINING HELPER FUNCTIONS
 
 ```{python}
+import requests
+from bs4 import BeautifulSoup
+```
+```{python}
 # Preparing searchable query string
 def search_query(s):
     """
@@ -58,6 +62,7 @@ def to_row(item):
         'video_url': item.get('video_url'),
         'recipe_url': f'https://tasty.co/recipe/{slug}' if slug else None,
         'ingredients': flatten(item),
+        'nutrition': item.get('nutrition')
     }
 
 ```
@@ -107,7 +112,6 @@ def scrape_week_plan(plan=202):
             # Splitting at the first colon: "Monday", rest of info...
             day, info = text.split(':', 1)
             day = day.strip()
-
             # Recipe is in the part before the first '$'
             recipe = info.split('$')[0].strip()
             # Price is in the first token after '$'
@@ -128,6 +132,8 @@ def scrape_week_plan(plan=202):
         'price': prices
     })
     return plan
+
+print(scrape_week_plan(202))
 ```
 
 2. Data from an API
@@ -137,17 +143,6 @@ Using the Tasty API from the practice activity, search for recipes that match th
 
 Hint: You may need to use some text editing tricks to convert the recipe name into a searchable string. Not all recipe names will find a match on the Tasty API; that’s okay and you can leave these blank.
 
-
-```{python}
-# Pulling the Monday recipe from the 'plan' dataframe
-mondays = (
-    plan.loc[plan['Days of the week'].str.contains('mon', case=False, na=False),
-        'Name of the recipe']
-    .iloc[0]
-)
-
-print(mondays)
-```
 
 ```{python}
 api = "a1f843d8f0msh79f993122eb68ecp1b45bajsn88d40dbd6eeb"
@@ -166,15 +161,67 @@ def fetch_tasty(name, api, max_results = 100, batch = 20):
     offset = 0
     while offset < max_results:
         size = min(batch, max_results - offset)
-        parameters = {'q': query, "from": str(offset), 'size': str(size)}
+        parameters = {'q': query, "from": offset, 'size': str(size)}
         req = requests.get(url, headers=headers, params=parameters)
         data = req.json()
-        items = data.get('results', [])
+        items = [i for i in data.get('results', []) if isinstance(i, dict) and i.get('name')]
         if not items:
             break
         results.extend(items)
         offset += size
     return results
+
+```
+
+
+```{python}
+# Defining plan
+plan = scrape_week_plan(202)
+
+# Pulling the Monday recipe from the 'plan' dataframe
+monday = (
+    plan.loc[plan['day'].str.contains('mon', case=False, na=False)]
+    .iloc[0]
+)
+
+term = search_query(monday['recipe_name'])
+
+url = "https://tasty.p.rapidapi.com/recipes/list"
+
+headers = {
+	"x-rapidapi-key": api,
+	"x-rapidapi-host": "tasty.p.rapidapi.com"
+    }
+
+all_results = []
+for i in range(0, 100, 20):
+    res = requests.get(url, headers=headers, params={'from': i, 'size': 20, 'q': term})
+    items = res.json().get('results', []) if res.ok else []
+    if not items:
+        break
+    all_results += items
+
+if not all_results and ' ' in term:
+    term = term.split()[0]
+    for i in range(0, 100, 20):
+        res = requests.get(url, headers=headers, params={'from': i, 'size': 20, 'q': term})
+        items = res.json().get('results', []) if res.ok else []
+        if not items:
+            break
+        all_results += items
+
+recipes = [i for i in all_results if str(i.get('canonical_id', '')).startswith('recipe:')]
+
+mondays_list = pd.DataFrame({
+    'day': [monday['day']] * len(recipes),
+    'recipe_name': [monday['recipe_name']] * len(recipes),
+    'source_link': [monday['source_link']] * len(recipes),
+    'price': [monday['price']] * len(recipes),
+    'tasty_title': [i.get('name') for i in recipes],
+    'tasty_url': [f"https://tasty.co/recipe/{i.get('slug')}" if i.get('slug') else None for i in recipes],
+})
+
+print(mondays_list)
 
 ```
 
@@ -197,7 +244,7 @@ df = get_mealplan_data(202)
 
 
 ```{python}
-def get_meal_plan(plan, api):
+def get_mealplan_data(plan, api):
     plan = scrape_week_plan(plan)
 
     # List to hold data from all days
@@ -212,7 +259,7 @@ def get_meal_plan(plan, api):
 
         # Search query
         query = search_query(name)
-        items = fetch_tasty(query, api="a1f843d8f0msh79f993122eb68ecp1b45bajsn88d40dbd6eeb",max_results=100, batch=20)
+        items = fetch_tasty(name, api=api,max_results=100, batch=20)
         rows = [to_row(i) for i in items]
         matches = pd.DataFrame(rows)
 
@@ -227,17 +274,15 @@ def get_meal_plan(plan, api):
         else:
             # Placeholder if row isn't found
             place = pd.DataFrame({
-                'days': [days],
-                'recipe_names': [names],
-                'links': [links],
-                'prices': [prices],
+                'days': [day],
+                'recipe_names': [name],
+                'links': [link],
+                'prices': [price],
                 'search_q': [query]
             })
             every_match.append(place)
     return pd.concat(every_match, ignore_index=True)
 
-df = get_meal_plan(210, api=api)
-print(df)
 
 ```
 
@@ -257,9 +302,9 @@ def add_veg_col(df):
     meats = ['chicken', 'pork', 'veal', 'lamb', 'turkey', 'salmon', 'tuna',
             'bacon', 'sausage', 'fish', 'ham', 'shrimp', 'beef']
     
-    df['is_vegetarian'] = ~df['title'].str.lower().apply(
-        lambda x: any(meat in x for meat in meats)
-    )
+    col = df['title'].astype(str).str.lower()
+
+    df['is_vegetarian'] = ~col.str.contains('|'.join(meats))
     return df
 df = add_veg_col(df)
 print(df.head())
@@ -267,6 +312,50 @@ print(df.head())
 
 5. Analyze
 Make a visualization that tells a story about nutrition information (available in the Tasty API results) across the week for Mealplan 202. Your visualization should also indicate which meals are vegetarian.
+
+```{python}
+# Creating a function to tidy the dataframe
+def preparing_df(df):
+    """
+    Extracting key columns, ordering the days, and melting to long format for easier plotting
+    """
+    if 'is_vegetarian' not in df.columns:
+        df = add_veg_col(df)
+
+    #1 Extracting nutrition
+    for key in ['calories', 'protein', 'fat', 'carbohydrates']:
+        df[key] = df['nutrition'].apply(
+            lambda i: i.get(key) if isinstance(i, dict) else None
+        )
+    
+    #2: Ordering the days so that the x-axis is readable
+    days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    if df['days'].isin(days).any():
+        df['days'] = pd.Categorical(df['days'], categories=days, ordered=True)
+    
+    #3: Aggregating is_vegetarian x days mean
+    aggregate = (
+        df.groupby(['days', 'is_vegetarian'], as_index=False, observed=True)
+        .agg({'calories': 'mean', 'protein': 'mean', 'fat': 'mean', 'carbohydrates': 'mean'})
+    )
+
+    #4: melting from wide to long to facet across nutrients
+    formatted = aggregate.melt(
+        id_vars=['days', 'is_vegetarian'],
+        value_vars=['calories', 'protein', 'fat', 'carbohydrates'],
+        var_name='nutrient',
+        value_name='value',
+    ).dropna(subset=['value'])
+
+    # relabeling
+    formatted['nutrient'] = formatted['nutrient'].map({
+        'calories': "Calories",
+        'protein': "Protein (g)",
+        'fat': 'Fat (g)',
+        'carbohydrates': 'Carbs (g)'
+    })
+    return formatted
+```
 
 ```{python}
 
@@ -278,22 +367,23 @@ def plot_meal_times(df):
     Visualizing total_time_minutes by day
     color-coded by vegetarian meal
     """
-
-    # Aggregate average cooking time per day
-    information = (
-        df.groupby(['days', 'is_vegetarian'], as_index=False)
-        .agg({'total_time_minutes': np.mean})
-    )
+    formatted = preparing_df(df)
 
     # Creating the plot
     p = (
-        ggplot(information, aes(x='days', y='total_time_minutes', fill='is_vegetarian'))
+    ggplot(formatted, aes(x='days', y='value', fill='is_vegetarian'))
     + geom_col(position='dodge')
+    + facet_wrap('~nutrient', scales='free_y', ncol=2)
     + labs(
-        title='Average Prep Time by Day (meal plan 202)',
+        title='Meal plan 202 - Nutrient by day (Vegetarian vs. Non-Veg)',
         x='Day of the week',
-        y='Average total time',
+        y='Average per recipe',
         fill='Vegetarian?')
+
+    + theme(
+        axis_text_x=element_text(rotation=45, ha='right'),
+        legend_position='top'
+    )
     )
     return p
 ```
