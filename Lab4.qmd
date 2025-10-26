@@ -36,14 +36,20 @@ def flatten(item):
     """
     Extracts a simple ingredients list from Tasty JSON
     """
-
+    # Retrieving sections
     sections = item.get('sections') or []
+    # Initializing container for character strings
     parts = []
+    # Iterating through section blocks
     for i in sections:
+        # Iterating through the components in the section block
         for component in i.get('components', []):
+            # Get the ingredient text if available
             raw_string = component.get('raw_text')
             if raw_string:
+                # Only appending non-empty values
                 parts.append(raw_string)
+    # Join with semi-colons or return None
     return "; ".join(parts) if parts else None
 
 
@@ -52,6 +58,7 @@ def to_row(item):
     Picking useful fields from Tasty recipe item
     """
     ratings = item.get('user_ratings') or {}
+    # Used to form tasty.co URL
     slug = item.get('slug')
     return {
         'tasty_id': item.get('id'),
@@ -60,8 +67,8 @@ def to_row(item):
         'num_servings': item.get('num_servings'),
         'total_time_minutes': item.get('total_time_minutes'),
         'video_url': item.get('video_url'),
-        'recipe_url': f'https://tasty.co/recipe/{slug}' if slug else None,
-        'ingredients': flatten(item),
+        'recipe_url': f'https://tasty.co/recipe/{slug}' if slug else None, # canonical recipe page
+        'ingredients': flatten(item), # flattened ingredient string
         'nutrition': item.get('nutrition')
     }
 
@@ -155,19 +162,26 @@ def fetch_tasty(name, api, max_results = 100, batch = 20):
 	"x-rapidapi-key": api,
 	"x-rapidapi-host": "tasty.p.rapidapi.com"
     }
-
+    # normalize search text using helper 
     query = search_query(name)
+    # Initializing list to accumulate all items
     results = []
+    # Initializing pagination offset
     offset = 0
+    # Looping until reaching the cap
     while offset < max_results:
+        # Choosing the batch size within the cap
         size = min(batch, max_results - offset)
+        # Setting query parameters for the page
         parameters = {'q': query, "from": offset, 'size': str(size)}
         req = requests.get(url, headers=headers, params=parameters)
         data = req.json()
+        # Pulling items list and only keeping dicts with a name
         items = [i for i in data.get('results', []) if isinstance(i, dict) and i.get('name')]
         if not items:
             break
         results.extend(items)
+        # Advancing the pagination
         offset += size
     return results
 
@@ -184,6 +198,7 @@ monday = (
     .iloc[0]
 )
 
+# normalizing search term
 term = search_query(monday['recipe_name'])
 
 url = "https://tasty.p.rapidapi.com/recipes/list"
@@ -194,14 +209,20 @@ headers = {
     }
 
 all_results = []
+# Defining 5 pages
 for i in range(0, 100, 20):
+    # Getting page 'i'
     res = requests.get(url, headers=headers, params={'from': i, 'size': 20, 'q': term})
+    # List of items
     items = res.json().get('results', []) if res.ok else []
+    # Stop once no results
     if not items:
         break
     all_results += items
 
+# Fallback - trying the first word only
 if not all_results and ' ' in term:
+    # will recognize 'chicken' in 'chicken divan'
     term = term.split()[0]
     for i in range(0, 100, 20):
         res = requests.get(url, headers=headers, params={'from': i, 'size': 20, 'q': term})
@@ -210,8 +231,10 @@ if not all_results and ' ' in term:
             break
         all_results += items
 
+# Keeping only recipes
 recipes = [i for i in all_results if str(i.get('canonical_id', '')).startswith('recipe:')]
 
+# Building monday list
 mondays_list = pd.DataFrame({
     'day': [monday['day']] * len(recipes),
     'recipe_name': [monday['recipe_name']] * len(recipes),
@@ -298,14 +321,18 @@ def add_veg_col(df):
     Adds a column is_veg based on the recipe title.
     Assumes that recipes containing the meat words are non-vegetarian
     """
-
+    # Defining meats
     meats = ['chicken', 'pork', 'veal', 'lamb', 'turkey', 'salmon', 'tuna',
             'bacon', 'sausage', 'fish', 'ham', 'shrimp', 'beef']
-    
+    # Normalizing title string
     col = df['title'].astype(str).str.lower()
-
+    # True if none of the meats match up
     df['is_vegetarian'] = ~col.str.contains('|'.join(meats))
     return df
+```
+
+```{python}
+df = get_mealplan_data(202, api=api)
 df = add_veg_col(df)
 print(df.head())
 ```
@@ -392,3 +419,7 @@ def plot_meal_times(df):
 plot = plot_meal_times(df)
 plot
 ```
+
+Takeaway:
+Vegetarian meals in plan 202 run higher in carbs (especially Wednesday and Thursday) and often higher in
+calories on those days, Tuesday is approximately even on calories between non-veg and vegetarian meals. Non vegetarian dishes are higher in protein on Tuesday and Thursday, but wednesday shows vegetarian dishes having a higher protein count. Some gaps in the plot are that friday shows only non-vegetarian bars (because there is no vegetarian match returned), which is why there isn't a side-by-side comparison for that day.
