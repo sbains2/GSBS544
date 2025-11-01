@@ -41,8 +41,12 @@ df = pd.read_csv('Insurance Costs.csv')
 df.info()
 df.describe()
 
-# Making dummy variables for sex and region
-df = pd.get_dummies(data=df, columns=['sex', 'region'], prefix=['sex', 'region'])
+# Making dummy variables for sex, region, smoking status
+sex_dummies = pd.get_dummies(df['sex'])
+region_dummies = pd.get_dummies(df['region'])
+smoker_dummies = pd.get_dummies(df['smoker'], prefix='smoker')
+
+df = pd.concat([df, sex_dummies, region_dummies, smoker_dummies], axis=1)
 df
 ```
 
@@ -72,10 +76,100 @@ The second plot I made was to determine the association between BMI and individu
 ```{python}
 # Plotting gender against individual medical charges
 (
-    ggplot(df, aes(x='sex_male', y='charges'))
+    ggplot(df, aes(x='male', y='charges'))
     + geom_boxplot()
 )
 ```
 
 The third plot I made was to look at the distribution of individual medical costs between genders. While the interquartile ranges are somewhat similar, there is far more outliers for females than males with higher individual medical costs.
+
+
+Part Two: Simple Linear Models
+Construct a simple linear model to predict the insurance charges from the beneficiary’s age. Discuss the model fit, and interpret the coefficient estimates.
+
+Make a model that also incorporates the variable sex. Report your results.
+
+Now make a model that does not include sex, but does include smoker. Report your results.
+
+Which model (Q2 or Q3) do you think better fits the data? Justify your answer by calculating the MSE for each model, and also by comparing R-squared values.
+
+```{python}
+import math
+# Defining target of medical cost and explanatory variable age.
+y = df['charges']
+X = df[['age']]
+
+# Training the data
+yt, yv, Xt, Xv = train_test_split(y, X, test_size=0.2, random_state=42)
+m = LinearRegression()
+
+# Fitting the model
+train = m.fit(Xt, yt)
+
+# finding R^2 score
+r2 = m.score(Xv, yv)
+
+# predicting
+y_pred = m.predict(Xv)
+
+mse = mean_squared_error(yv, y_pred)
+rmse = math.sqrt(mse)
+
+print(f'R^2 for charges dependent on age: {r2}, MSE: {mse}, RMSE: {rmse}')
+
+```
+
+
+```{python}
+# Defining target of medical cost and explanatory variable age, and gender.
+y = df['charges']
+X = df[['age', 'male']]
+
+# Training the data
+yt, yv, Xt, Xv = train_test_split(y, X, test_size=0.2, random_state=42)
+m = LinearRegression()
+
+# Fitting the model
+train = m.fit(Xt, yt)
+
+# finding R^2 score
+r2 = m.score(Xv, yv)
+
+# predicting
+y_pred = m.predict(Xv)
+
+mse = mean_squared_error(yv, y_pred)
+rmse = math.sqrt(mse)
+
+print(f'R^2 for charges dependent on age and sex: {r2}, MSE: {mse}, RMSE: {rmse}')
+
+```
+
+
+```{python}
+# Defining target of medical cost and explanatory variable age, and smoking status.
+y = df['charges']
+X = df[['age', 'smoker_yes']]
+
+# Training the data
+yt, yv, Xt, Xv = train_test_split(y, X, test_size=0.2, random_state=42)
+m = LinearRegression()
+
+# Fitting the model
+train = m.fit(Xt, yt)
+
+# finding R^2 score
+r2 = m.score(Xv, yv)
+
+# predicting
+y_pred = m.predict(Xv)
+
+mse = mean_squared_error(yv, y_pred)
+rmse = math.sqrt(mse)
+
+print(f'R^2 for charges dependent on age and smoking status: {r2}, MSE: {mse}, RMSE: {rmse}')
+
+```
+
+From looking at the model metrics, we're able to see that age and smoking status tended to explain the variation of medical costs the most, with an R2 value of 0.831. In addition to this, we see that this model also has the lowest mean squared error. When looking at the root mean squared error for this model, we see that on average, the model prediction error is around $5,200.
 
