@@ -1,3 +1,14 @@
+---
+title: GSBS544 Lab 5
+author: Sahil Bains
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+echo: true
+---
+Github Link: https://github.com/sbains2/GSBS544
+
 ## Part One: Data Exploration
 The dataset we will study for this assignment contains information about health insurance costs for individuals with no dependents (children) in the United States. The information contained in the data is:
 
@@ -19,7 +30,52 @@ Fix any concerns you have about the data.
 
 Make up to three plots comparing the response variable (charges) to one of the predictor variables. Briefly discuss each plot.
 
+```{python}
+import pandas as pd
+import numpy as np
+from plotnine import *
+from sklearn import *
+
+# Reading in the data and doing some preliminary checks
+df = pd.read_csv('Insurance Costs.csv')
+df.info()
+df.describe()
+
+# Making dummy variables for sex and region
+df = pd.get_dummies(data=df, columns=['sex', 'region'], prefix=['sex', 'region'])
+df
+```
+
 
 ```{python}
+# Plot 1
+# Making plots comparing charges to one's smoking status
+(
+    ggplot(df, aes(x='smoker', y='charges'))
+    + geom_boxplot()
+)
 
 ```
+
+The first plot that I made was to determine the individual medical costs for individuals that smoked. I used a boxplot to determine the distribution of mcharges given one's smoking status and found that those who smoked paid significantly more in individual medical costs.
+
+```{python}
+# Making a plot to see the association between bmi and individual medical charges, with the color of each point being age
+(
+    ggplot(df, aes(x='bmi', y='charges', color='age'))
+    + geom_point()
+)
+```
+
+The second plot I made was to determine the association between BMI and individual medical costs billed. There was no notable relationship between these two variables, but one is able to see that older people pay somewhat more for individual medical costs.
+
+```{python}
+# Plotting gender against individual medical charges
+(
+    ggplot(df, aes(x='sex_male', y='charges'))
+    + geom_boxplot()
+)
+```
+
+The third plot I made was to look at the distribution of individual medical costs between genders. While the interquartile ranges are somewhat similar, there is far more outliers for females than males with higher individual medical costs.
+
