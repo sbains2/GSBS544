@@ -39,7 +39,7 @@ from sklearn import *
 # Reading in the data and doing some preliminary checks
 df = pd.read_csv('Insurance Costs.csv')
 df.info()
-df.describe()
+df.describe() # no null values
 
 # Making dummy variables for sex, region, smoking status
 sex_dummies = pd.get_dummies(df['sex'])
@@ -47,7 +47,6 @@ region_dummies = pd.get_dummies(df['region'])
 smoker_dummies = pd.get_dummies(df['smoker'], prefix='smoker')
 
 df = pd.concat([df, sex_dummies, region_dummies, smoker_dummies], axis=1)
-df
 ```
 
 
@@ -61,7 +60,7 @@ df
 
 ```
 
-_The first plot that I made was to determine the individual medical costs for individuals that smoked. I used a boxplot to determine the distribution of mcharges given one's smoking status and found that those who smoked paid significantly more in individual medical costs._
+_The first plot that I made was to determine the individual medical costs for individuals that smoked. I used a boxplot to determine the distribution of charges given one's smoking status and found that those who smoked paid significantly more in individual medical costs._
 
 ```{python}
 # Making a plot to see the association between bmi and individual medical charges, with the color of each point being age
@@ -76,7 +75,7 @@ _The second plot I made was to determine the association between BMI and individ
 ```{python}
 # Plotting gender against individual medical charges
 (
-    ggplot(df, aes(x='male', y='charges'))
+    ggplot(df, aes(x='sex', y='charges'))
     + geom_boxplot()
 )
 ```
@@ -100,7 +99,7 @@ y = df['charges']
 X = df[['age']]
 
 # Training the data
-yt, yv, Xt, Xv = train_test_split(y, X, test_size=0.2, random_state=42)
+Xt, Xv, yt, yv = train_test_split(X, y, test_size=0.2, random_state=42)
 m = LinearRegression()
 
 # Fitting the model
@@ -128,7 +127,7 @@ y = df['charges']
 X = df[['age', 'male']]
 
 # Training the data
-yt, yv, Xt, Xv = train_test_split(y, X, test_size=0.2, random_state=42)
+Xt, Xv, yt, yv = train_test_split(X, y, test_size=0.2, random_state=42)
 m = LinearRegression()
 
 # Fitting the model
@@ -150,11 +149,12 @@ print(f'R^2 for charges dependent on age and sex: {r2}, MSE: {mse}, RMSE: {rmse}
 
 ```{python}
 # Defining target of medical cost and explanatory variable age, and smoking status.
+df['smoker_int'] = df['smoker'].map({'no': 0, 'yes': 1})
 y = df['charges']
-X = df[['age', 'smoker_yes']]
+X = df[['age', 'smoker_int']]
 
 # Training the data
-yt, yv, Xt, Xv = train_test_split(y, X, test_size=0.2, random_state=42)
+Xt, Xv, yt, yv = train_test_split(X, y, test_size=0.2, random_state=42)
 m = LinearRegression()
 
 # Fitting the model
@@ -199,7 +199,7 @@ y = df['charges']
 X = df[['age', 'bmi']]
 
 # Training the data
-yt, yv, Xt, Xv = train_test_split(y, X, test_size=0.2, random_state=42)
+Xt, Xv, yt, yv = train_test_split(X, y, test_size=0.2, random_state=42)
 m = LinearRegression()
 
 # Fitting the model
@@ -230,7 +230,7 @@ df['age_squared'] = df['age'] ** 2
 X = df[['age', 'age_squared']]
 
 # Training the data
-yt, yv, Xt, Xv = train_test_split(y, X, test_size=0.2, random_state=42)
+Xt, Xv, yt, yv = train_test_split(X, y, test_size=0.2, random_state=42)
 m = LinearRegression()
 
 # Fitting the model
@@ -256,11 +256,16 @@ c.
 
 # Defining target of medical cost and explanatory variable age, and age.
 y = df['charges']
+
+# Defining 4th degree polynomials
+df['age_squared'] = df['age'] ** 2
+df['age_d3'] = df['age'] ** 3
 df['age_d4'] = df['age'] ** 4
-X = df[['age', 'age_d4']]
+
+X = df[['age', 'age_squared', 'age_d3', 'age_d4']]
 
 # Training the data
-yt, yv, Xt, Xv = train_test_split(y, X, test_size=0.2, random_state=42)
+Xt, Xv, yt, yv = train_test_split(X, y, test_size=0.2, random_state=42)
 m = LinearRegression()
 
 # Fitting the model
@@ -279,17 +284,31 @@ print(f"R2: {r2}, MSE: {mse}, RMSE: {rmse}")
 
 ```
 
+
 _With comparing the model metrics of individual medical costs dependent on age and 4th degree polynomial of age and individual medical costs dependent on age, we can see that there is a very slightly higher R^2 score with the polynomial feature included. This means that a slightly higher portion of the variability in cost can be explained by the polynomial feature. In addition to this, the MSE is slightly lower with the polynomial feature included, indicating on average, there is a lower error rate._
 
 ```{python}
 
 # Defining target of medical cost and explanatory variable age, and age.
 y = df['charges']
+
+# Defining 12th degree polynomials
+df['age_squared'] = df['age'] ** 2
+df['age_d3'] = df['age'] ** 3
+df['age_d4'] = df['age'] ** 4
+df['age_d5'] = df['age'] ** 5
+df['age_d6'] = df['age'] ** 6
+df['age_d7'] = df['age'] ** 7
+df['age_d8'] = df['age'] ** 8
+df['age_d9'] = df['age'] ** 9
+df['age_d10'] = df['age'] ** 10
+df['age_d11'] = df['age'] ** 11
 df['age_d12'] = df['age'] ** 12
-X = df[['age', 'age_d12']]
+
+X = df[['age', 'age_squared', 'age_d3', 'age_d4', 'age_d5', 'age_d6', 'age_d7', 'age_d8', 'age_d9', 'age_d10', 'age_d11', 'age_d12']]
 
 # Training the data
-yt, yv, Xt, Xv = train_test_split(y, X, test_size=0.2, random_state=42)
+Xt, Xv, yt, yv = train_test_split(X, y, test_size=0.2, random_state=42)
 m = LinearRegression()
 
 # Fitting the model
@@ -308,20 +327,20 @@ print(f"R2: {r2}, MSE: {mse}, RMSE: {rmse}")
 
 ```
 
-_With comparing the model metrics of individual medical costs dependent on age and 12th degree polynomial of age and individual medical costs dependent on age, we can see that there is a significantly lower R^2 score with the polynomial feature included. This means that a lower portion of the variability in cost can be explained by the polynomial feature. In addition to this, the MSE is higher with the polynomial feature included, indicating on average, there is a higher error rate._
+_With comparing the model metrics of individual medical costs dependent on age and 12th degree polynomial of age and individual medical costs dependent on age, we can see that there is a slightly higher R^2 score with the 12th degree polynomial feature included. This means that a higher portion of the variability in cost can be explained by the polynomial feature. In addition to this, the MSE is slightly lower with the 12th degree polynomial feature included, indicating on average, there is a slightly error rate._
 
 _e. In understanding which model shows the best predictability, we look at which predictors scored the highest R^2 values and the lowest MSE, which turned out to be the model with smoking status included. We can see that with this feature included, there is a significantly higher value which shows that the variation in medical costs can be explained best by a person's smoking status. In addition to this, there is a lower error rate, on average, that the model makes with predictions._
 
 f. 
 ```{python}
-# Subsetting dataframe to age, charges, and 12th degree polynomial age
-plotting = df[['age', 'charges', 'age_d12']]
+
 # Making predictions for 12th degree age polynomial for series
-plotting['predictions_d12'] = m.predict(plotting[['age', 'age_d12']])
+df['predictions_d12'] = m.predict(df[['age', 'age_squared', 'age_d3', 'age_d4', 'age_d5', 'age_d6','age_d7', 'age_d8', 'age_d9', 'age_d10', 'age_d11', 'age_d12']])
+
 plotting = plotting.sort_values('age')
 
 (
-    ggplot(plotting, aes(x='age', y='charges'))
+    ggplot(df, aes(x='age', y='charges'))
     + geom_point()
     + geom_line(aes(y='predictions_d12'), color='red')
 )
@@ -367,7 +386,7 @@ y = df['charges']
 X = df[['age']]
 
 # Training the data on the original data
-yt, yv, Xt, Xv = train_test_split(y, X, test_size=0.2, random_state=42)
+Xt, Xv, yt, yv = train_test_split(X, y, test_size=0.2, random_state=42)
 m = LinearRegression()
 
 # Fitting the model on the original data
@@ -393,7 +412,7 @@ y = df['charges']
 X = df[['age', 'bmi']]
 
 # Training the data on the original data
-yt, yv, Xt, Xv = train_test_split(y, X, test_size=0.2, random_state=42)
+Xt, Xv, yt, yv = train_test_split(X, y, test_size=0.2, random_state=42)
 m = LinearRegression()
 
 # Fitting the model on the original data
@@ -430,10 +449,10 @@ df['bmi_smoker'] = df['bmi'] * df['smoker_int']
 part4['age_smoker'] = part4['age'] * part4['smoker_int']
 part4['bmi_smoker'] = part4['bmi'] * part4['smoker_int']
 
-X = df[['age_smoker', 'bmi_smoker', 'age', 'bmi', 'smoker_int']]
+X = df[['age', 'bmi', 'smoker_int']]
 
 # Training the data on the original data
-yt, yv, Xt, Xv = train_test_split(y, X, test_size=0.2, random_state=42)
+Xt, Xv, yt, yv = train_test_split(X, y, test_size=0.2, random_state=42)
 m = LinearRegression()
 
 # Fitting the model on the original data
@@ -443,7 +462,7 @@ train = m.fit(Xt, yt)
 r2 = m.score(Xv, yv)
 
 # using the fitted model to predict on the new data
-y_pred = m.predict(part4[['age_smoker', 'bmi_smoker', 'age', 'bmi', 'smoker_int']])
+y_pred = m.predict(part4[['age', 'bmi', 'smoker_int']])
 mse = mean_squared_error(part4['charges'], y_pred)
 rmse = math.sqrt(mse)
 
@@ -451,9 +470,130 @@ print(f"R2: {r2}, MSE: {mse}, RMSE: {rmse}")
 
 ```
 
+_With the new model with age, bmi, and smoker, based on fitting the model on the original data and running predictions for the new data, we see that the MSE is 34935958.47, and the R^2 value is 0.4364_
+
+d.
+```{python}
+
+# Defining target of medical cost and explanatory variable age.
+y = df['charges']
+
+X = df[['age_smoker', 'bmi_smoker']]
+
+# Training the data on the original data
+Xt, Xv, yt, yv = train_test_split(X, y, test_size=0.2, random_state=42)
+m = LinearRegression()
+
+# Fitting the model on the original data
+train = m.fit(Xt, yt)
+
+# finding R^2 score
+r2 = m.score(Xv, yv)
+
+# using the fitted model to predict on the new data
+y_pred = m.predict(part4[['age_smoker', 'bmi_smoker']])
+mse = mean_squared_error(part4['charges'], y_pred)
+rmse = math.sqrt(mse)
+
+print(f"R2: {r2}, MSE: {mse}, RMSE: {rmse}")
+
+```
+
+_With the new model with interaction term for age * smoker, and bmi * smoker, based on fitting the model on the original data and running predictions for the new data, we see that the MSE is 47916148.47, and the R^2 value is 0.1344_
+
+e.
+```{python}
+
+# Defining target of medical cost and explanatory variable age.
+y = df['charges']
+
+X = df[['age', 'bmi', 'smoker_int', 'age_smoker', 'bmi_smoker']]
+
+# Training the data on the original data
+Xt, Xv, yt, yv = train_test_split(X, y, test_size=0.2, random_state=42)
+m = LinearRegression()
+
+# Fitting the model on the original data
+train = m.fit(Xt, yt)
+
+# finding R^2 score
+r2 = m.score(Xv, yv)
+
+# using the fitted model to predict on the new data
+y_pred_best = m.predict(part4[['age', 'bmi', 'smoker_int', 'age_smoker', 'bmi_smoker']])
+mse = mean_squared_error(part4['charges'], y_pred_best)
+rmse = math.sqrt(mse)
+
+print(f"R2: {r2}, MSE: {mse}, RMSE: {rmse}")
+
+```
+
+_With the new model for age, bmi, smoker, and the interaction term for age * smoker, and bmi * smoker, based on fitting the model on the original data and running predictions for the new data, we see that the MSE is 21455882.14, and the R^2 value is 0.6956_
+
+_We can see that the best model, with considering all the interactions between the predictor variables, is that model that includes the full interaction terms (age * smoker, bmi * smoker) AND the predictor variables age and bmi._
+
+```{python}
+# Making a plot showing the residuals for the best model, with the full interaction
+
+# Creating new column for the residuals
+part4['residuals'] = part4['charges'] - y_pred_best
+
+(
+    ggplot(part4, aes('charges', 'residuals'))
+    + geom_point()
+    + geom_line()
+)
+
+```
 
 
 Part Five: Full Exploration
 Using any variables in this dataset, and any polynomial of those variables, find the model that best predicts on the new data after being fit on the original data.
 
 Make a plot showing the residuals of your final chosen model.
+
+
+
+```{python}
+# Creating a final model based on all the best predictors 
+
+# Creating quadratic polynomial for bmi
+df['bmi_squared'] = df['bmi'] ** 2
+part4['bmi_squared'] = part4['bmi'] ** 2
+
+# Defining target of medical cost and explanatory variable age.
+y = df['charges']
+X = df[['age', 'bmi', 'bmi_squared', 'smoker_int', 'age_smoker', 'bmi_smoker']]
+
+# Training the data on the original data
+Xt, Xv, yt, yv = train_test_split(X, y, test_size=0.2, random_state=42)
+m = LinearRegression()
+
+# Fitting the model on the original data
+train = m.fit(Xt, yt)
+
+# finding R^2 score
+r2 = m.score(Xv, yv)
+
+# using the fitted model to predict on the new data
+y_pred_final = m.predict(part4[['age', 'bmi', 'bmi_squared', 'smoker_int', 'age_smoker', 'bmi_smoker']])
+mse = mean_squared_error(part4['charges'], y_pred_final)
+rmse = math.sqrt(mse)
+
+print(f"R2: {r2}, MSE: {mse}, RMSE: {rmse}")
+```
+
+Plotting the residuals
+```{python}
+# Making a plot showing the residuals for the best model, with the full interaction
+
+# Creating new column for the residuals
+part4['residuals'] = part4['charges'] - y_pred_final
+
+(
+    ggplot(part4, aes('charges', 'residuals'))
+    + geom_point()
+    + geom_line()
+)
+
+```
