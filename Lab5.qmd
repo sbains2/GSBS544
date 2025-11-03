@@ -122,7 +122,8 @@ print(f'R^2 for charges dependent on age: {r2}, MSE: {mse}, RMSE: {rmse}')
 print(m.coef_, m.intercept_)
 
 ```
-In understanding the model fit for the predictor age on medical costs, we can see there is a weak association between the two variables with a R2 of .1287. In addition to this, there is a high model error indicated by the MSE value. In addition to this, we see that for every one year increase in age, there is a ~$214.55 increase in the individual costs billed by the health insurance.
+
+_In understanding the model fit for the predictor age on medical costs, we can see there is a weak association between the two variables with a R2 of .1287. In addition to this, there is a high model error indicated by the MSE value. In addition to this, we see that for every one year increase in age, there is a ~$214.55 increase in the individual costs billed by the health insurance._
 
 b. 
 ```{python}
@@ -292,6 +293,7 @@ print(f"R2: {r2}, MSE: {mse}, RMSE: {rmse}")
 
 _With comparing the model metrics of individual medical costs dependent on age and 4th degree polynomial of age and individual medical costs dependent on age, we can see that there is a very slightly higher R^2 score with the polynomial feature included. This means that a slightly higher portion of the variability in cost can be explained by the polynomial feature. In addition to this, the MSE is slightly lower with the polynomial feature included, indicating on average, there is a lower error rate._
 
+d.
 ```{python}
 
 # Defining target of medical cost and explanatory variable age up to the 12th degree polynomial.
@@ -332,7 +334,7 @@ print(f"R2: {r2}, MSE: {mse}, RMSE: {rmse}")
 
 ```
 
-_With comparing the model metrics of individual medical costs dependent on age and 12th degree polynomial of age and individual medical costs dependent on age, we can see that there is a slightly higher R^2 score with the 12th degree polynomial feature included. This means that a higher portion of the variability in cost can be explained by the polynomial feature. In addition to this, the MSE is slightly lower with the 12th degree polynomial feature included, indicating on average, there is a slightly error rate. An important consideration with the 12th degree polynomial is that they typically overfit and add little generalization compared to adding meaningful predictors like smoking status._
+_With comparing the model metrics of individual medical costs dependent on age and 12th degree polynomial of age and individual medical costs dependent on age, we can see that there is a slightly lower R^2 score with the 12th degree polynomial feature included. This means that a SLIGHTLY lower portion of the variability in cost can be explained by the polynomial feature. In addition to this, the MSE is slightly higher with the 12th degree polynomial feature included, indicating on average, there is a slightly higher error rate. An important consideration with the 12th degree polynomial is that they typically overfit and add little generalization compared to adding meaningful predictors like smoking status._
 
 _e. In understanding which model shows the best predictability, we look at which predictors scored the highest R^2 values and the lowest MSE, which turned out to be the model with smoking status included. We can see that with this feature included, there is a significantly higher value which shows that the variation in medical costs can be explained best by a person's smoking status. In addition to this, there is a lower error rate, on average, that the model makes with predictions._
 
@@ -434,10 +436,10 @@ y_pred = m.predict(part4[['age', 'bmi']])
 mse = mean_squared_error(part4['charges'], y_pred)
 rmse = math.sqrt(mse)
 
-print(f"R2: {r2}, MSE: {mse}, RMSE: {rmse}")
+print(f"MSE: {mse}, RMSE: {rmse}")
 
 ```
-_With the new model for age and bmi as predictors based on fitting the model on the original data and running predictions for the new data, we see that the MSE is 133511270.10, and the R^2 value is -0.0449_
+_With the new model for age and bmi as predictors based on fitting the model on the original data and running predictions for the new data, we see that the MSE is 133723221.99_
 
 
 c. 
@@ -474,11 +476,11 @@ y_pred = m.predict(part4[['age', 'bmi', 'smoker_int']])
 mse = mean_squared_error(part4['charges'], y_pred)
 rmse = math.sqrt(mse)
 
-print(f"R2: {r2}, MSE: {mse}, RMSE: {rmse}")
+print(f"MSE: {mse}, RMSE: {rmse}")
 
 ```
 
-_With the new model with age, bmi, and smoker, based on fitting the model on the original data and running predictions for the new data, we see that the MSE is 34935958.47, and the R^2 value is 0.4364_
+_With the new model with age, bmi, and smoker, based on fitting the model on the original data and running predictions for the new data, we see that the MSE is 35709591.85_
 
 d.
 ```{python}
@@ -503,11 +505,11 @@ y_pred = m.predict(part4[['age_smoker', 'bmi_smoker']])
 mse = mean_squared_error(part4['charges'], y_pred)
 rmse = math.sqrt(mse)
 
-print(f"R2: {r2}, MSE: {mse}, RMSE: {rmse}")
+print(f"MSE: {mse}, RMSE: {rmse}")
 
 ```
 
-_With the new model with interaction term for age * smoker, and bmi * smoker, based on fitting the model on the original data and running predictions for the new data, we see that the MSE is 47916148.47, and the R^2 value is 0.1344_
+_With the new model with interaction term for age * smoker, and bmi * smoker, based on fitting the model on the original data and running predictions for the new data, we see that the MSE is 47916148.47_
 
 e.
 ```{python}
@@ -529,10 +531,10 @@ r2 = m.score(Xv, yv)
 
 # using the fitted model to predict on the new data
 y_pred_best = m.predict(part4[['age', 'bmi', 'smoker_int', 'age_smoker', 'bmi_smoker']])
-mse = mean_squared_error(part4['charges'], y_pred_best)
-rmse = math.sqrt(mse)
+e4_mse = mean_squared_error(part4['charges'], y_pred_best)
+rmse = math.sqrt(e4_mse)
 
-print(f"R2: {r2}, MSE: {mse}, RMSE: {rmse}")
+print(f"R2: {r2}, MSE: {e4_mse}, RMSE: {rmse}")
 
 ```
 
@@ -542,14 +544,17 @@ _We can see that the best model, with considering all the interactions between t
 
 ```{python}
 # Making a plot showing the residuals for the best model, with the full interaction
+# Creating a new column for the predicted fitted model
+part4['fitted'] = y_pred_best
+
 
 # Creating new column for the residuals
-part4['residuals'] = part4['charges'] - y_pred_best
+part4['residuals'] = part4['charges'] - part4['fitted']
 
 (
-    ggplot(part4, aes('charges', 'residuals'))
+    ggplot(part4, aes('fitted', 'residuals'))
     + geom_point()
-    + geom_line()
+    + geom_hline(yintercept=0)
 )
 
 ```
@@ -588,8 +593,11 @@ y_pred_final = m.predict(part4[['age', 'bmi', 'bmi_squared', 'smoker_int', 'age_
 mse = mean_squared_error(part4['charges'], y_pred_final)
 rmse = math.sqrt(mse)
 
-print(f"R2: {r2}, MSE: {mse}, RMSE: {rmse}")
+print('Improvement in model versus part 4:', e4_mse - mse)
+
 ```
+We're able to see that from the positive value by subtracting the explored model's MSE from part 4 model's MSE, part 5 model's has a lower MSE, indicating on average that there's a lower model error rate.
+
 
 Plotting the residuals
 ```{python}
@@ -604,7 +612,7 @@ part4['residuals'] = part4['charges'] - part4['fitted_final']
     + geom_point()
     + geom_hline(yintercept=0)
     + labs(
-        x='Charges'
+        x='Fitted values of the final model'
     )
 )
 
