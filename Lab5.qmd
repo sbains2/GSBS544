@@ -35,20 +35,22 @@ import pandas as pd
 import numpy as np
 from plotnine import *
 from sklearn import *
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
 
 # Reading in the data and doing some preliminary checks
 df = pd.read_csv('Insurance Costs.csv')
 df.info()
 df.describe() # no null values
 
-# Making dummy variables for sex, region, smoking status
+# Making dummy variables for sex, region, smoking status - created but not used later
 sex_dummies = pd.get_dummies(df['sex'])
 region_dummies = pd.get_dummies(df['region'])
 smoker_dummies = pd.get_dummies(df['smoker'], prefix='smoker')
 
 df = pd.concat([df, sex_dummies, region_dummies, smoker_dummies], axis=1)
 ```
-
 
 ```{python}
 # Plot 1
@@ -60,7 +62,7 @@ df = pd.concat([df, sex_dummies, region_dummies, smoker_dummies], axis=1)
 
 ```
 
-_The first plot that I made was to determine the individual medical costs for individuals that smoked. I used a boxplot to determine the distribution of charges given one's smoking status and found that those who smoked paid significantly more in individual medical costs._
+_The first plot that I made was to determine the individual medical costs for individuals that smoked. I used a boxplot to determine the distribution of charges given one's smoking status and found that those who smoked paid significantly more in individual medical costs. You're able to see that the median and IQR are much higher for smokers._
 
 ```{python}
 # Making a plot to see the association between bmi and individual medical charges, with the color of each point being age
@@ -70,7 +72,7 @@ _The first plot that I made was to determine the individual medical costs for in
 )
 ```
 
-_The second plot I made was to determine the association between BMI and individual medical costs billed. There was no notable relationship between these two variables, but one is able to see that older people pay somewhat more for individual medical costs._
+_The second plot I made was to determine the association between BMI and individual medical costs billed. One is able to see that charges rise with age. At higher BMI, there is greater dispersion between the charges._
 
 ```{python}
 # Plotting gender against individual medical charges
@@ -80,18 +82,20 @@ _The second plot I made was to determine the association between BMI and individ
 )
 ```
 
-_The third plot I made was to look at the distribution of individual medical costs between genders. While the interquartile ranges are somewhat similar, there is far more outliers for females than males with higher individual medical costs._
+_The third plot I made was to look at the distribution of individual medical costs between genders. While the interquartile ranges are somewhat similar, differences in sex appear to be less significant relative to smoking._
 
 
 Part Two: Simple Linear Models
-Construct a simple linear model to predict the insurance charges from the beneficiary’s age. Discuss the model fit, and interpret the coefficient estimates.
+a. Construct a simple linear model to predict the insurance charges from the beneficiary’s age. Discuss the model fit, and interpret the coefficient estimates.
 
-Make a model that also incorporates the variable sex. Report your results.
+b. Make a model that also incorporates the variable sex. Report your results.
 
-Now make a model that does not include sex, but does include smoker. Report your results.
+c. Now make a model that does not include sex, but does include smoker. Report your results.
 
-Which model (Q2 or Q3) do you think better fits the data? Justify your answer by calculating the MSE for each model, and also by comparing R-squared values.
+d. Which model (Q2 or Q3) do you think better fits the data? Justify your answer by calculating the MSE for each model, and also by comparing R-squared values.
 
+
+a. 
 ```{python}
 import math
 # Defining target of medical cost and explanatory variable age.
@@ -120,7 +124,7 @@ print(m.coef_, m.intercept_)
 ```
 In understanding the model fit for the predictor age on medical costs, we can see there is a weak association between the two variables with a R2 of .1287. In addition to this, there is a high model error indicated by the MSE value. In addition to this, we see that for every one year increase in age, there is a ~$214.55 increase in the individual costs billed by the health insurance.
 
-
+b. 
 ```{python}
 # Defining target of medical cost and explanatory variable age, and gender.
 y = df['charges']
@@ -146,7 +150,7 @@ print(f'R^2 for charges dependent on age and sex: {r2}, MSE: {mse}, RMSE: {rmse}
 
 ```
 
-
+c.
 ```{python}
 # Defining target of medical cost and explanatory variable age, and smoking status.
 df['smoker_int'] = df['smoker'].map({'no': 0, 'yes': 1})
@@ -173,7 +177,8 @@ print(f'R^2 for charges dependent on age and smoking status: {r2}, MSE: {mse}, R
 
 ```
 
-_From looking at the model metrics, we're able to see that age and smoking status tended to explain the variation of medical costs the most, with an R2 value of 0.831. In addition to this, we see that this model also has the lowest mean squared error. When looking at the root mean squared error for this model, we see that on average, the model prediction error is around $5,200._
+d.
+_From looking at the model metrics, we're able to see that age and smoking status tended to explain the variation of medical costs the most, with an R2 value of 0.831, because smoking is primary driver. In addition to this, we see that this model also has the lowest mean squared error. When looking at the root mean squared error for this model, we see that on average, the model prediction error is around $5,200._
 
 
 Part Three: Multiple Linear Models
@@ -224,7 +229,7 @@ _We're able to see that there is a very weak association between individual medi
 b.
 ```{python}
 
-# Defining target of medical cost and explanatory variable age, and age.
+# Defining target of medical cost and explanatory variable age, and age^2.
 y = df['charges']
 df['age_squared'] = df['age'] ** 2
 X = df[['age', 'age_squared']]
@@ -249,12 +254,12 @@ print(f"R2: {r2}, MSE: {mse}, RMSE: {rmse}")
 
 ```
 
-_With comparing the model metrics of individual medical costs dependent on age and age squared and individual medical costs dependent on age, we can see that there is a very slightly higher R^2 score with the polynomial feature included. This means that a slightly higher portion of the variability in cost can be explained by the polynomial feature. In addition to this, the MSE is slightly lower with the polynomial feature included, indicating on average, there is a lower error rate._
+_With comparing the model metrics of individual medical costs dependent on age and age squared and individual medical costs dependent on age, we can see that there is a slightly lower R^2 score with the polynomial feature included. This means that a slightly lower portion of the variability in cost can be explained by the polynomial feature. In addition to this, the MSE is slightly higher with the polynomial feature included, indicating on average, there is a higher error rate._
 
 c.
 ```{python}
 
-# Defining target of medical cost and explanatory variable age, and age.
+# Defining target of medical cost and explanatory variable 4th degree polynomials.
 y = df['charges']
 
 # Defining 4th degree polynomials
@@ -289,7 +294,7 @@ _With comparing the model metrics of individual medical costs dependent on age a
 
 ```{python}
 
-# Defining target of medical cost and explanatory variable age, and age.
+# Defining target of medical cost and explanatory variable age up to the 12th degree polynomial.
 y = df['charges']
 
 # Defining 12th degree polynomials
@@ -327,7 +332,7 @@ print(f"R2: {r2}, MSE: {mse}, RMSE: {rmse}")
 
 ```
 
-_With comparing the model metrics of individual medical costs dependent on age and 12th degree polynomial of age and individual medical costs dependent on age, we can see that there is a slightly higher R^2 score with the 12th degree polynomial feature included. This means that a higher portion of the variability in cost can be explained by the polynomial feature. In addition to this, the MSE is slightly lower with the 12th degree polynomial feature included, indicating on average, there is a slightly error rate._
+_With comparing the model metrics of individual medical costs dependent on age and 12th degree polynomial of age and individual medical costs dependent on age, we can see that there is a slightly higher R^2 score with the 12th degree polynomial feature included. This means that a higher portion of the variability in cost can be explained by the polynomial feature. In addition to this, the MSE is slightly lower with the 12th degree polynomial feature included, indicating on average, there is a slightly error rate. An important consideration with the 12th degree polynomial is that they typically overfit and add little generalization compared to adding meaningful predictors like smoking status._
 
 _e. In understanding which model shows the best predictability, we look at which predictors scored the highest R^2 values and the lowest MSE, which turned out to be the model with smoking status included. We can see that with this feature included, there is a significantly higher value which shows that the variation in medical costs can be explained best by a person's smoking status. In addition to this, there is a lower error rate, on average, that the model makes with predictions._
 
@@ -337,12 +342,15 @@ f.
 # Making predictions for 12th degree age polynomial for series
 df['predictions_d12'] = m.predict(df[['age', 'age_squared', 'age_d3', 'age_d4', 'age_d5', 'age_d6','age_d7', 'age_d8', 'age_d9', 'age_d10', 'age_d11', 'age_d12']])
 
-plotting = plotting.sort_values('age')
+df = df.sort_values('age')
 
 (
     ggplot(df, aes(x='age', y='charges'))
     + geom_point()
-    + geom_line(aes(y='predictions_d12'), color='red')
+    + geom_line(aes(x='age', y='predictions_d12'), color='red')
+    + labs(
+        title='12th degree polynomial prediction'
+    )
 )
 ```
 
@@ -400,10 +408,10 @@ y_pred = m.predict(part4[['age']])
 mse = mean_squared_error(part4['charges'], y_pred)
 rmse = math.sqrt(mse)
 
-print(f"R2: {r2}, MSE: {mse}, RMSE: {rmse}")
+print(f"MSE: {mse}, RMSE: {rmse}")
 
 ```
-_With the new model for age as the only predictor based on fitting the model on the original data and running predictions for the new data, we see that the MSE is 136184222.69, and the R^2 value is 0.2642_
+_With the new model for age as the only predictor based on fitting the model on the original data and running predictions for the new data, we see that the MSE is 136184222.69_
 
 b.
 ```{python}
@@ -586,14 +594,21 @@ print(f"R2: {r2}, MSE: {mse}, RMSE: {rmse}")
 Plotting the residuals
 ```{python}
 # Making a plot showing the residuals for the best model, with the full interaction
-
+# Formatting the final fitted predictions into column for neatness
+part4['fitted_final'] = y_pred_final
 # Creating new column for the residuals
-part4['residuals'] = part4['charges'] - y_pred_final
+part4['residuals'] = part4['charges'] - part4['fitted_final']
 
 (
-    ggplot(part4, aes('charges', 'residuals'))
+    ggplot(part4, aes('fitted_final', 'residuals'))
     + geom_point()
-    + geom_line()
+    + geom_hline(yintercept=0)
+    + labs(
+        x='Charges'
+    )
 )
 
 ```
+
+Conclusion:
+The residual plot shows that most points are centered around 0, indicating that it is a reasonably good fit. However, at higher fitted values, there is more variation and spread in the residuals. Overall, the model explains the data accurately, but can be further refined to handle the larger charges more effectively.
