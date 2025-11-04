@@ -1,0 +1,208 @@
+
+```{python}
+import pandas as pd
+import numpy as np
+from sklearn.pipeline import Pipeline
+from sklearn.compose import make_column_selector, ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, PolynomialFeatures
+from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet 
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.metrics import r2_score
+```
+
+Practice Activity
+Consider four possible models for predicting house prices:
+
+Using only the size and number of rooms.
+Using size, number of rooms, and building type.
+Using size and building type, and their interaction.
+Using a 5-degree polynomial on size, a 5-degree polynomial on number of rooms, and also building type.
+Set up a pipeline for each of these four models.
+
+Then, get predictions on the test set for each of your pipelines, and compute the root mean squared error. Which model performed best?
+
+Note: You should only use the function train_test_split() one time in your code; that is, we should be predicting on the same test set for all three models.
+
+
+```{python}
+# Reading in the data and doing some checks
+df = pd.read_csv('Ames Housing Data.csv')
+df.info()
+df.describe()
+```
+
+Using only the size and number of rooms to predict housing prices
+
+
+```{python}
+X = df[['Gr Liv Area', 'TotRms AbvGrd']]
+y = df['SalePrice']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+pipeline1 = Pipeline(
+  [("Standard_scaler", StandardScaler()),
+  ("linear_regression", LinearRegression())]
+)
+
+pipeline1
+
+pipeline1_fitted = lr_pipeline1.fit(X_train, y_train)
+
+y_preds = pipeline1_fitted.predict(X_test)
+
+scores1 = cross_val_score(pipeline1_fitted, X, y, cv=5, scoring='r2')
+
+print(mean_squared_error(y_test, y_preds))
+print('Our final corss-validated R-squared value is', scores1.mean())
+
+
+
+```
+
+Using size, number of rooms, and building type.
+
+
+```{python}
+# Setting up column transformer
+X = df.drop(columns=['SalePrice'])
+y = df['SalePrice']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+
+ct1 = ColumnTransformer(
+  [
+    ("dummify", OneHotEncoder(sparse_output = False), ["Bldg Type"]),
+    ("standardize", StandardScaler(), ["Gr Liv Area", "TotRms AbvGrd"])
+  ],
+  remainder = "drop"
+)
+
+
+lr_pipeline2 = Pipeline(
+  [("preprocessing", ct1),
+  ("linear_regression", LinearRegression())]
+)
+
+pipeline2_fitted = lr_pipeline2.fit(X_train, y_train)
+
+y_preds = pipeline2_fitted.predict(X_test)
+
+scores2 = cross_val_score(pipeline2_fitted, X, y, cv=5, scoring='r2')
+
+print(mean_squared_error(y_test, y_preds))
+print('Our final corss-validated R-squared value is', scores2.mean())
+
+```
+
+Using size and building type, and their interaction.
+
+```{python}
+ct2 = ColumnTransformer(
+  [
+    ("dummify", OneHotEncoder(sparse_output = False), ["Bldg Type"]),
+    ("standardize", StandardScaler(), ["Gr Liv Area"]),
+  ],
+  remainder = "drop"
+)
+
+
+lr_pipeline3 = Pipeline(
+  [("preprocessing", ct2),
+  ('interaction', PolynomialFeatures(degree=2, include_bias=False, interaction_only=True)),
+  ("linear_regression", LinearRegression())
+  ]
+)
+
+pipeline3_fitted = lr_pipeline3.fit(X_train, y_train)
+
+y_preds = pipeline3_fitted.predict(X_test)
+
+scores3 = cross_val_score(pipeline3_fitted, X, y, cv=5, scoring='r2')
+
+print(mean_squared_error(y_test, y_preds))
+print('Our final corss-validated R-squared value is', scores3.mean())
+```
+
+Using a 5-degree polynomial on size, a 5-degree polynomial on number of rooms, and also building type.
+
+```{python}
+ct3 = ColumnTransformer(
+  [
+    ("dummify", OneHotEncoder(sparse_output = False), ["Bldg Type"]),
+    ("standardize", StandardScaler(), ["Gr Liv Area", "TotRms AbvGrd"]),
+    ('Living Area Poly5', PolynomialFeatures(degree=5, include_bias=False), ['Gr Liv Area']),
+    ('Rooms Poly5', PolynomialFeatures(degree=5, include_bias=False), ['TotRms AbvGrd'])
+  ],
+  remainder = "drop"
+)
+
+
+lr_pipeline4 = Pipeline(
+  [("preprocessing", ct3),
+  ("linear_regression", LinearRegression())
+  ]
+)
+
+pipeline4_fitted = lr_pipeline4.fit(X_train, y_train)
+
+y_preds = pipeline4_fitted.predict(X_test)
+
+scores4 = cross_val_score(pipeline4_fitted, X, y, cv=5, scoring='r2')
+
+print(mean_squared_error(y_test, y_preds))
+print('Our final corss-validated R-squared value is', scores4.mean())
+```
+
+Based on the mean squared error, model 1 was the most preferred model.
+
+Given our final cross validation scores, model 3 was the most preferred model.
+
+
+Consider one hundred modeling options for house price:
+
+House size, trying degrees 1 through 10
+Number of rooms, trying degrees 1 through 10
+Building Type
+Hint: The dictionary of possible values that you make to give to GridSearchCV will have two elements instead of one.
+
+Q1: Which model performed the best?
+
+Q2: What downsides do you see of trying all possible model options? How might you go about choosing a smaller number of tuning values to try?
+
+```{python}
+from sklearn.model_selection import GridSearchCV
+
+ct_poly = ColumnTransformer(
+  [
+    ("dummify", OneHotEncoder(sparse_output = False), ["Bldg Type"]),
+    ("polynomial_living_area", PolynomialFeatures(), ["Gr Liv Area"]),
+    ("polynomial_rooms", PolynomialFeatures(), ["TotRms AbvGrd"]),
+
+  ],
+  remainder = "drop"
+)
+
+lr_pipeline_poly = Pipeline(
+  [("preprocessing", ct_poly),
+  ("linear_regression", LinearRegression())]
+).set_output(transform="pandas")
+
+degrees = [
+            {'preprocessing__polynomial_living_area__degree': [i],
+            'preprocessing__polynomial_rooms__degree': [i]}
+            for i in np.arange(1,10)
+]
+
+gscv = GridSearchCV(lr_pipeline_poly, degrees, cv = 5, scoring='r2')
+
+gscv_fitted = gscv.fit(X_train, y_train)
+
+pd.DataFrame(data = {"degrees": np.arange(1, 10), "scores": gscv_fitted.cv_results_['mean_test_score']})
+
+```
+
+Q1: The model with the 3rd degree polynomial achieved the highest R^2 value of 0.556, meaning that ~55% of the variation in home sale prices can be determined by the 3rd polynomial transformations of living area and the amount of rooms that a house has, and the best predictive ability on unseen data. After degree 3 leads to progressively lower performance indicated by the R^2 values, indicating that overfitting is associated with higher polynomial models.
+
+Q2: The downsides of trying all possible models are that it can be computationally intensive to run all models with the polynomial terms, leading to higher runtimes and higher computational cost. In addition to this, there is an overfitting risk with models with higher degrees of polynomials, where the models may react well to the training data, but may not effectively generalize to unseen data.
