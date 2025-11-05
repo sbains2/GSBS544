@@ -35,6 +35,7 @@ Using only the size and number of rooms to predict housing prices
 
 
 ```{python}
+import math
 X = df[['Gr Liv Area', 'TotRms AbvGrd']]
 y = df['SalePrice']
 
@@ -53,7 +54,7 @@ y_preds = pipeline1_fitted.predict(X_test)
 
 scores1 = cross_val_score(pipeline1_fitted, X, y, cv=5, scoring='r2')
 
-print(mean_squared_error(y_test, y_preds))
+print(math.sqrt(mean_squared_error(y_test, y_preds)))
 print('Our final corss-validated R-squared value is', scores1.mean())
 
 
@@ -91,7 +92,7 @@ y_preds = pipeline2_fitted.predict(X_test)
 
 scores2 = cross_val_score(pipeline2_fitted, X, y, cv=5, scoring='r2')
 
-print(mean_squared_error(y_test, y_preds))
+print(math.sqrt(mean_squared_error(y_test, y_preds)))
 print('Our final corss-validated R-squared value is', scores2.mean())
 
 ```
@@ -121,7 +122,7 @@ y_preds = pipeline3_fitted.predict(X_test)
 
 scores3 = cross_val_score(pipeline3_fitted, X, y, cv=5, scoring='r2')
 
-print(mean_squared_error(y_test, y_preds))
+print(math.sqrt(mean_squared_error(y_test, y_preds)))
 print('Our final corss-validated R-squared value is', scores3.mean())
 ```
 
@@ -151,7 +152,7 @@ y_preds = pipeline4_fitted.predict(X_test)
 
 scores4 = cross_val_score(pipeline4_fitted, X, y, cv=5, scoring='r2')
 
-print(mean_squared_error(y_test, y_preds))
+print(math.sqrt(mean_squared_error(y_test, y_preds)))
 print('Our final corss-validated R-squared value is', scores4.mean())
 ```
 
