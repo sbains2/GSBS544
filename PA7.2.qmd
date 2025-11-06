@@ -1,0 +1,222 @@
+---
+title: GSBS544 PA 7.2
+author: Sahil Bains
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+echo: true
+---
+Github Link: https://github.com/sbains2/GSBS544
+
+```{python}
+import pandas as pd
+import numpy as np
+from sklearn.pipeline import Pipeline
+from sklearn.compose import make_column_selector, ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, PolynomialFeatures
+from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet 
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.metrics import r2_score
+```
+
+```{python}
+# Importing dataset
+ames = pd.read_csv('Ames Housing Data.csv')
+
+# Getting rid of columns with mostly NaN values
+good_cols = ames.isna().sum() < 100
+ames = ames.loc[:,good_cols]
+
+# Drop other NAs
+ames = ames.dropna()
+```
+
+Make a pipeline that uses all the variables in the Ames dataset, and then fits Ridge Regression with lambda = 1
+
+```{python}
+
+# Defining X and y
+X = ames.drop(['SalePrice'], axis=1)
+y = ames['SalePrice']
+
+# Setting column tranformer
+ct = ColumnTransformer(
+  [
+    ("dummify",
+    OneHotEncoder(sparse_output = False, handle_unknown='ignore'),
+    make_column_selector(dtype_include=object)), # dummifying all objects
+    ("standardize",
+    StandardScaler(),
+    make_column_selector(dtype_include=np.number)) # standardizing all numeric dtypes
+  ],
+  remainder = "passthrough"
+).set_output(transform="pandas")
+
+# Setting up a pipeline
+ridge_pipe = Pipeline(
+  [("preprocessing", ct),
+  ("ridge_regression", Ridge(alpha=1))]
+)
+
+ridge_pipe_fitted = ridge_pipe.fit(X, y)
+
+
+```
+
+Cross-validate this pipeline and compare the results to the ordinary linear regression.
+
+```{python}
+# Cross validating the ridge pipeline
+cross_val_score(ridge_pipe, X, y, cv = 5, scoring = 'r2')
+
+# array([0.89606397, 0.91732875, 0.79517272, 0.78531569, 0.91326376]) High R^2!
+```
+
+```{python}
+
+# Cross validating the OLS model
+# Setting column tranformer
+ct = ColumnTransformer(
+  [
+    ("dummify",
+    OneHotEncoder(sparse_output = False, handle_unknown='ignore'),
+    make_column_selector(dtype_include=object)), # dummifying all objects
+    ("standardize",
+    StandardScaler(),
+    make_column_selector(dtype_include=np.number)) # standardizing all numeric dtypes
+  ],
+  remainder = "passthrough"
+).set_output(transform="pandas")
+
+# Setting up a pipeline
+pipe = Pipeline(
+  [("preprocessing", ct),
+  ("linear_regression", LinearRegression())]
+)
+
+pipe_fitted = pipe.fit(X, y)
+cross_val_score(pipe, X, y, cv = 5, scoring = 'r2')
+
+# array([0.89494407, 0.91048149, 0.78926457, 0.772167  , 0.9000737 ]) High R^2, cross validation R^2 is lower with OLS pipeline than ridge regression pipeline
+
+```
+
+
+Then fit the model on the whole dataset and get the coefficients. Make a plot of these coefficients compared to the ones from ordinary linear regression.
+
+```{python}
+coefficient_compare = pd.DataFrame()
+
+coefficient_compare["lr"] = pipe_fitted.named_steps['linear_regression'].coef_
+coefficient_compare["ridge"] = ridge_pipe_fitted.named_steps['ridge_regression'].coef_
+coefficient_compare["diff"] = coefficient_compare["lr"] - coefficient_compare["ridge"]
+
+coefficient_compare.sort_values(by = "diff")
+
+coefficient_compare.plot.scatter(x="lr", y = "ridge")
+```
+
+
+Using the same pipeline as previously, perform tuning on lambda
+
+```{python}
+
+alphas = {'ridge_regression__alpha': np.array([10, 1, 0.1, 0.01, 0.001])}
+
+gscv = GridSearchCV(ridge_pipe, param_grid=alphas, cv = 5, scoring='r2')
+
+```
+
+You should always try values on a log scale; that is, don’t use [1,2,3,4]; instead use something like [0.001, 0.01, 0.1, 1, 10]
+
+```{python}
+fitted_grid = gscv.fit(X,y)
+
+pd.DataFrame(data = {"alphas": np.array([10, 1, 0.1, 0.01, 0.001]), "scores": fitted_grid.cv_results_['mean_test_score']})
+
+```
+
+Create a LASSO pipeline, and tune lambda
+
+```{python}
+# Setting column tranformer
+ct = ColumnTransformer(
+  [
+    ("dummify",
+    OneHotEncoder(sparse_output = False, handle_unknown='ignore'),
+    make_column_selector(dtype_include=object)), # dummifying all objects
+    ("standardize",
+    StandardScaler(),
+    make_column_selector(dtype_include=np.number)) # standardizing all numeric dtypes
+  ],
+  remainder = "passthrough"
+).set_output(transform="pandas")
+
+# Setting up a pipeline
+lasso_pipe = Pipeline(
+  [("preprocessing", ct),
+  ("lasso_regression", Lasso(alpha=1))]
+)
+
+lasso_pipe_fitted = lasso_pipe.fit(X, y)
+```
+
+```{python}
+# tuning different alpha values
+alphas = {'lasso_regression__alpha': np.array([10, 1, 0.1, 0.01, 0.001])}
+
+# initializing grid search
+gscv = GridSearchCV(lasso_pipe, param_grid=alphas, cv = 5, scoring='r2')
+
+# fitting the grid search on the lasso pipeline
+fitted_grid = gscv.fit(X,y)
+
+
+pd.DataFrame(data = {"alphas": np.array([10, 1, 0.1, 0.01, 0.001]), "scores": fitted_grid.cv_results_['mean_test_score']})
+
+```
+
+Fit your best model on the full Ames data, and compare the coefficients to Ridge and OLS
+
+```{python}
+coefficient_compare["lasso"] = lasso_pipe_fitted.named_steps['lasso_regression'].coef_
+coefficient_compare["lasso_diff"] = coefficient_compare["ridge"] - coefficient_compare["lasso"]
+coefficient_compare.sort_values(by = "lasso_diff")
+
+```
+
+Create an Elastic Net pipeline, and tune lambda and alpha
+
+```{python}
+# Defining elastic pipeline
+elastic_pipe = Pipeline(
+  [("preprocessing", ct),
+  ("elastic_net", ElasticNet(alpha=1, l1_ratio=0.5))]
+).set_output(transform='pandas')
+
+tuning_grid = {
+    "elastic_net__alpha": [0.1, 0.01, 0.001],
+    "elastic_net__l1_ratio": np.arange(0.0, 1.2, 0.2),
+}
+
+gscv = GridSearchCV(elastic_pipe, param_grid=tuning_grid, cv = 5, scoring='r2')
+
+fitted_grid = gscv.fit(X,y)
+
+results = pd.DataFrame({
+    'alpha': gscv.cv_results_['param_elastic_net__alpha'].astype(float),
+    'l1_ratio': gscv.cv_results_['param_elastic_net__l1_ratio'].astype(float),
+    'mean_r^2': gscv.cv_results_['mean_test_score']
+}).sort_values(by=['mean_r^2', 'l1_ratio'])
+results
+```
+
+Fit your best model on the full Ames data, and compare the coefficients to Ridge and OLS.
+
+```{python}
+coefficient_compare["elastic"] = fitted_grid.best_estimator_.named_steps['elastic_net'].coef_
+coefficient_compare["elastic_ridge_diff"] = coefficient_compare["ridge"] - coefficient_compare["elastic"]
+coefficient_compare["elastic_ols_diff"] = coefficient_compare["lr"] - coefficient_compare["elastic"]
+coefficient_compare.sort_values(['elastic_ridge_diff', 'elastic_ols_diff'])
+```
