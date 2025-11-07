@@ -102,8 +102,10 @@ Interpretation:
 iii. Use cross-validation to estimate the MSE you would expect if you used this pipeline to predict 1989 salaries.
 
 ```{python}
+# Finding cross validation scores
 scores = cross_val_score(fitted, X, y, cv=5, scoring='r2')
 
+# predicting on the fitted model
 y_preds = fitted.predict(X_test)
 
 print('CV R2 scores:', scores, 'mean squared error:', mean_squared_error(y_test, y_preds))
@@ -117,9 +119,10 @@ Create a pipeline that includes all the columns as predictors for Salary, and pe
 
 ```{python}
 
+# Creating a pipeline that performs ordinary ridge regression
 ridge_pipe = Pipeline(
     [
-        ('standardizing', ct),
+        ('standardizing', ct), # using the original standardizing column transformer
         ('ridge_regression', Ridge(alpha=1))
     ]
 )
@@ -132,13 +135,15 @@ Use cross-validation to tune the lambda hyperparameter.
 
 ```{python}
 
-
+# Defining the alpha values
 alphas = {'ridge_regression__alpha': np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001])}
 
+# Defining the grid search cross validation on the ridge pipeline 
 gscv = GridSearchCV(ridge_pipe, param_grid=alphas, cv = 5, scoring='r2')
 
 fitted_grid = gscv.fit(X,y)
 
+# Creating a dataframe of the differing values of alphas and the scores of the fitted grid search cross val scores
 pd.DataFrame(data = {"alphas": np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001]), "scores": fitted_grid.cv_results_['mean_test_score']})
 
 
@@ -148,12 +153,28 @@ Fit the pipeline with your chosen lambda to the full dataset, and interpret a fe
 
 ```{python}
 
+# Initializing new dataframe
+coeffs = pd.DataFrame()
+
+# Creating column to see all the features along with the ridge regression coeffiicents
+coeffs['features'] = ridge_pipe_fitted.named_steps['standardizing'].get_feature_names_out()
+coeffs['ridge'] = ridge_pipe_fitted.named_steps['ridge_regression'].coef_
+
+coeffs
 
 ```
+
+In interpreting some of the most important coefficients, we can see that for every 1 increase standard deviation in number of runs in a players career, the salary is expected to increase by $321.88. Another significant factor would be the number of hits in 1986, where every standard deviation increase in the number of hits translates to an increase in the salary by $286.92.
+
+
 
 Report the MSE you would expect if you used this pipeline to predict 1989 salaries.
 
 ```{python}
+
+y_preds = ridge_pipe_fitted.predict(X_test)
+
+print('mean squared error:', mean_squared_error(y_test, y_preds))
 
 ```
 
