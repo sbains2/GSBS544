@@ -35,7 +35,9 @@ df
 ```
 
 Part I: Different Model Specs
-A. Regression without regularization
+A. 
+
+i. Regression without regularization
 Create a pipeline that includes all the columns as predictors for Salary, and performs ordinary linear regression
 
 ```{python}
@@ -73,15 +75,173 @@ print(r2)
 
 ```
 
-Fit this pipeline to the full dataset, and interpret a few of the most important coefficients.
+ii. Fit this pipeline to the full dataset, and interpret a few of the most important coefficients.
+
+```{python}
+# Fitting pipeline to entire dataset
+fitted = pipe.fit(X,y)
+
+# Getting all the feature names from the fitted column transformer steps - dummify and standardizing variables
+features = fitted.named_steps['preprocessing'].get_feature_names_out()
+
+# Getting all the coefficients
+coeffs = fitted.named_steps['linear_regression'].coef_
+
+# Initializing dataframe to put coefficients in
+comparing_coeffs = pd.DataFrame()
+
+# Formatting coefficients and features in dataframe
+comparing_coeffs["coeffs"] = coeffs
+comparing_coeffs['features'] = features
+
+comparing_coeffs
+```
+
+Interpretation:
+
+iii. Use cross-validation to estimate the MSE you would expect if you used this pipeline to predict 1989 salaries.
+
+```{python}
+scores = cross_val_score(fitted, X, y, cv=5, scoring='r2')
+
+y_preds = fitted.predict(X_test)
+
+print('CV R2 scores:', scores, 'mean squared error:', mean_squared_error(y_test, y_preds))
+
+```
+
+If we utilized this pipeline, using the current cross validation scores available, we can estimate a MSE of 112677.23, indicating the model error would, on average, give us salary estimates that are $112677.23 off.
+
+B. Ridge regression
+Create a pipeline that includes all the columns as predictors for Salary, and performs ordinary ridge regression
+
+```{python}
+
+ridge_pipe = Pipeline(
+    [
+        ('standardizing', ct),
+        ('ridge_regression', Ridge(alpha=1))
+    ]
+)
+
+ridge_pipe_fitted = ridge_pipe.fit(X_train, y_train)
+
+```
+
+Use cross-validation to tune the lambda hyperparameter.
+
+```{python}
+
+
+alphas = {'ridge_regression__alpha': np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001])}
+
+gscv = GridSearchCV(ridge_pipe, param_grid=alphas, cv = 5, scoring='r2')
+
+fitted_grid = gscv.fit(X,y)
+
+pd.DataFrame(data = {"alphas": np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001]), "scores": fitted_grid.cv_results_['mean_test_score']})
+
+
+```
+
+Fit the pipeline with your chosen lambda to the full dataset, and interpret a few of the most important coefficients.
+
+```{python}
+
+
+```
+
+Report the MSE you would expect if you used this pipeline to predict 1989 salaries.
 
 ```{python}
 
 ```
 
-Use cross-validation to estimate the MSE you would expect if you used this pipeline to predict 1989 salaries.
-
+C. Lasso Regression
+Create a pipeline that includes all the columns as predictors for Salary, and performs ordinary ridge regression
 
 ```{python}
 
 ```
+
+Use cross-validation to tune the 
+ hyperparameter.
+
+```{python}
+
+```
+
+Fit the pipeline with your chosen 
+ to the full dataset, and interpret a few of the most important coefficients.
+
+```{python}
+
+```
+
+Report the MSE you would expect if you used this pipeline to predict 1989 salaries.
+
+```{python}
+
+```
+
+D. Elastic Net
+Create a pipeline that includes all the columns as predictors for Salary, and performs ordinary ridge regression
+
+```{python}
+
+```
+
+Use cross-validation to tune the lambda and alpha hyperparameters.
+
+```{python}
+
+```
+
+Fit the pipeline with your chosen hyperparameters to the full dataset, and interpret a few of the most important coefficients.
+
+```{python}
+
+```
+
+Report the MSE you would expect if you used this pipeline to predict 1989 salaries.
+
+```{python}
+
+```
+
+Part II. Variable Selection
+Based on the above results, decide on:
+
+Which numeric variable is most important.
+
+Which five numeric variables are most important
+
+Which categorical variable is most important
+
+For each of the four model specifications, compare the following possible feature sets:
+
+Using only the one best numeric variable.
+
+Using only the five best variables.
+
+Using the five best numeric variables and their interactions with the one best categorical variable.
+
+Report which combination of features and model performed best, based on the validation metric of MSE.
+
+(Note: 
+ and 
+ must be re-tuned for each feature set.)
+
+Part III. Discussion
+A. Ridge
+Compare your Ridge models with your ordinary regression models. How did your coefficients compare? Why does this make sense?
+
+B. LASSO
+Compare your LASSO model in I with your three LASSO models in II. Did you get the same 
+ results? Why does this make sense? Did you get the same MSEs? Why does this make sense?
+
+C. Elastic Net
+Compare your MSEs for the Elastic Net models with those for the Ridge and LASSO models. Why does it make sense that Elastic Net always “wins”?
+
+Part IV: Final Model
+Fit your final best pipeline on the full dataset, and summarize your results in a few short sentences and a plot.

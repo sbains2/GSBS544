@@ -57,11 +57,11 @@ pipeline1 = Pipeline(
 
 pipeline1
 
-pipeline1_fitted = lr_pipeline1.fit(X_train, y_train)
+pipeline1_fitted = pipeline1.fit(X_train, y_train)
 
 y_preds = pipeline1_fitted.predict(X_test)
 
-scores1 = cross_val_score(pipeline1_fitted, X, y, cv=5, scoring='r2')
+scores1 = cross_val_score(pipeline1, X, y, cv=5, scoring='r2')
 
 print(math.sqrt(mean_squared_error(y_test, y_preds)))
 print('Our final corss-validated R-squared value is', scores1.mean())
@@ -99,7 +99,7 @@ pipeline2_fitted = lr_pipeline2.fit(X_train, y_train)
 
 y_preds = pipeline2_fitted.predict(X_test)
 
-scores2 = cross_val_score(pipeline2_fitted, X, y, cv=5, scoring='r2')
+scores2 = cross_val_score(lr_pipeline2, X, y, cv=5, scoring='r2')
 
 print(math.sqrt(mean_squared_error(y_test, y_preds)))
 print('Our final corss-validated R-squared value is', scores2.mean())
@@ -129,7 +129,7 @@ pipeline3_fitted = lr_pipeline3.fit(X_train, y_train)
 
 y_preds = pipeline3_fitted.predict(X_test)
 
-scores3 = cross_val_score(pipeline3_fitted, X, y, cv=5, scoring='r2')
+scores3 = cross_val_score(lr_pipeline3, X, y, cv=5, scoring='r2')
 
 print(math.sqrt(mean_squared_error(y_test, y_preds)))
 print('Our final corss-validated R-squared value is', scores3.mean())
@@ -159,13 +159,13 @@ pipeline4_fitted = lr_pipeline4.fit(X_train, y_train)
 
 y_preds = pipeline4_fitted.predict(X_test)
 
-scores4 = cross_val_score(pipeline4_fitted, X, y, cv=5, scoring='r2')
+scores4 = cross_val_score(lr_pipeline4, X, y, cv=5, scoring='r2')
 
 print(math.sqrt(mean_squared_error(y_test, y_preds)))
 print('Our final corss-validated R-squared value is', scores4.mean())
 ```
 
-Based on the mean squared error, model 1 was the most preferred model.
+Based on the mean squared error, model 3 was the most preferred model.
 
 Given our final cross validation scores, model 3 was the most preferred model.
 
@@ -182,7 +182,7 @@ Q1: Which model performed the best?
 Q2: What downsides do you see of trying all possible model options? How might you go about choosing a smaller number of tuning values to try?
 
 ```{python}
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV # FIX
 
 ct_poly = ColumnTransformer(
   [
