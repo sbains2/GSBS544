@@ -15,7 +15,7 @@ import numpy as np
 from sklearn.pipeline import Pipeline
 from sklearn.compose import make_column_selector, ColumnTransformer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder, PolynomialFeatures
-from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet 
+from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import r2_score
 import math
@@ -179,29 +179,53 @@ print('mean squared error:', mean_squared_error(y_test, y_preds))
 ```
 
 C. Lasso Regression
-Create a pipeline that includes all the columns as predictors for Salary, and performs ordinary ridge regression
+Create a pipeline that includes all the columns as predictors for Salary, and performs ordinary lasso regression
+
+```{python}
+# Creating a pipeline that performs ordinary lasso regression
+lasso_pipe = Pipeline(
+    [
+        ('standardizing', ct), # using the original standardizing column transformer
+        ('lasso_regression', Lasso(alpha=1))
+    ]
+)
+
+lasso_pipe_fitted = lasso_pipe.fit(X_train, y_train)
+```
+
+Use cross-validation to tune the lambda hyperparameter.
 
 ```{python}
 
+# Defining the alpha values
+alphas = {'lasso_regression__alpha': np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001])}
+
+# Defining the grid search cross validation on the ridge pipeline 
+gscv = GridSearchCV(lasso_pipe, param_grid=alphas, cv = 5, scoring='r2')
+
+fitted_grid = gscv.fit(X,y)
+
+# Creating a dataframe of the differing values of alphas and the scores of the fitted grid search cross val scores
+pd.DataFrame(data = {"alphas": np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001]), "scores": fitted_grid.cv_results_['mean_test_score']})
+
+
 ```
 
-Use cross-validation to tune the 
- hyperparameter.
+Fit the pipeline with your chosen lambda to the full dataset, and interpret a few of the most important coefficients.
 
 ```{python}
+coeffs['lasso'] = lasso_pipe_fitted.named_steps['lasso_regression'].coef_
 
 ```
-
-Fit the pipeline with your chosen 
- to the full dataset, and interpret a few of the most important coefficients.
-
-```{python}
-
-```
+In interpreting the most important coefficients after fitting a lasso regression, we see that a 1 sd increase in the number of walks that a player has a $9.95 increase in a players salary. In addition to this, for every 1 sd increase in the number of put outs that a player has, a player's salary increases by $7.57.
 
 Report the MSE you would expect if you used this pipeline to predict 1989 salaries.
 
 ```{python}
+
+y_preds = lasso_pipe_fitted.predict(X_test)
+
+print('mean squared error:', mean_squared_error(y_test, y_preds))
 
 ```
 
@@ -209,6 +233,15 @@ D. Elastic Net
 Create a pipeline that includes all the columns as predictors for Salary, and performs ordinary ridge regression
 
 ```{python}
+# Creating a pipeline that performs ordinary lasso regression
+elastic_pipe = Pipeline(
+    [
+        ('standardizing', ct), # using the original standardizing column transformer
+        ('elastic_regression', ElasticNet(alpha=1, l1_ratio=0.5))
+    ]
+)
+
+elastic_pipe_fitted = elastic_pipe.fit(X_train, y_train)
 
 ```
 
@@ -216,19 +249,42 @@ Use cross-validation to tune the lambda and alpha hyperparameters.
 
 ```{python}
 
+# Defining the alpha and l1_ratio values
+tuning = {'elastic_regression__alpha': np.array([1, 0.1, 0.01, 0.001, 0.0001]),
+          'elastic_regression__l1_ratio': np.array([0.001, 0.0001, 0.00001, 0.000001, 0.0000001])}
+
+# Defining the grid search cross validation on the ridge pipeline 
+gscv = GridSearchCV(elastic_pipe, param_grid=tuning, cv = 5, scoring='r2')
+
+fitted_grid = gscv.fit(X,y)
+
+# Creating a dataframe of the differing values of alphas and the scores of the fitted grid search cross val scores
+pd.DataFrame({
+    'alpha': fitted_grid.cv_results_['param_elastic_regression__alpha'].astype(float),
+    'l1_ratio': fitted_grid.cv_results_["param_elastic_regression__l1_ratio"].astype(float),
+    'mean_r2': fitted_grid.cv_results_["mean_test_score"]
+}).sort_values('mean_r2', ascending=False)
+
 ```
 
 Fit the pipeline with your chosen hyperparameters to the full dataset, and interpret a few of the most important coefficients.
 
 ```{python}
+coeffs['elastic'] = elastic_pipe_fitted.named_steps['elastic_regression'].coef_
 
+coeffs
 ```
 
 Report the MSE you would expect if you used this pipeline to predict 1989 salaries.
 
 ```{python}
 
+y_preds = elastic_pipe_fitted.predict(X_test)
+
+print('mean squared error:', mean_squared_error(y_test, y_preds))
+
 ```
+
 
 Part II. Variable Selection
 Based on the above results, decide on:
