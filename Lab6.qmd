@@ -52,7 +52,7 @@ numeric = X.select_dtypes(include=[np.number]).columns
 # Setting up column transformer
 ct = ColumnTransformer(
     [ # Dummifying league, division, and new league
-        ('dummify', OneHotEncoder(sparse_output=False), ['League', 'Division', 'NewLeague']),
+        ('dummify', OneHotEncoder(sparse_output=False, drop='first'), ['League', 'Division', 'NewLeague']),
         # Standardizing all numeric variables
         ('standardize', StandardScaler(), numeric)
     ],
@@ -287,6 +287,8 @@ Fit the pipeline with your chosen hyperparameters to the full dataset, and inter
 
 ```{python}
 
+elastic_full = fitted_grid.best_estimator_
+
 comparing_coeffs['elastic'] = elastic_full.named_steps['elastic_regression'].coef_
 
 comparing_coeffs
@@ -333,6 +335,9 @@ Using only the one best numeric variable.
 ```{python}
 # Running linear regression for only number of putouts a player has
 
+# Defining new X
+X = df[['PutOuts']]
+
 # Setting up new column transformer
 ct = ColumnTransformer(
     [   # Standardizing all numeric variables
@@ -373,8 +378,20 @@ comparing_coeffs
 # Setting up pipeline
 ridge_pipe = Pipeline(
   [("preprocessing", ct),
-  ("ridge_regression", Ridge(alpha=100))]
+  ("ridge_regression", Ridge())]
 )
+
+# Defining the alpha values
+alphas = {'ridge_regression__alpha': np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001])}
+
+# Defining the grid search cross validation on the ridge pipeline 
+gscv = GridSearchCV(ridge_pipe, param_grid=alphas, cv = 5, scoring='r2')
+
+fitted_grid = gscv.fit(X,y)
+
+best_alpha = fitted_grid.best_params_['ridge_regression__alpha']
+
+ridge_pipe = fitted_grid.best_estimator_
 
 # Fitting pipeline to entire dataset
 ridge_fitted = ridge_pipe.fit(X,y)
@@ -397,8 +414,20 @@ comparing_coeffs
 # Setting up pipeline
 lasso_pipe = Pipeline(
   [("preprocessing", ct),
-  ("lasso_regression", Lasso(alpha=100))]
+  ("lasso_regression", Lasso())]
 )
+
+# Defining the alpha values
+alphas = {'lasso_regression__alpha': np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001])}
+
+# Defining the grid search cross validation on the ridge pipeline 
+gscv = GridSearchCV(lasso_pipe, param_grid=alphas, cv = 5, scoring='r2')
+
+fitted_grid = gscv.fit(X,y)
+
+best_alpha = fitted_grid.best_params_['lasso_regression__alpha']
+
+lasso_pipe = fitted_grid.best_estimator_
 
 # Fitting pipeline to entire dataset
 lasso_fitted = lasso_pipe.fit(X,y)
@@ -421,8 +450,21 @@ comparing_coeffs
 # Setting up pipeline
 elastic_pipe = Pipeline(
   [("preprocessing", ct),
-  ("elastic_regression", ElasticNet(alpha=1, l1_ratio=0.5))]
+  ("elastic_regression", ElasticNet())]
 )
+
+# Defining the alpha and l1 ratio values
+alphas = {'elastic_regression__alpha': np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001]),
+         'elastic_regression__l1_ratio': np.array([0.001, 0.0001, 0.00001, 0.000001, 0.0000001])}
+
+# Defining the grid search cross validation on the ridge pipeline 
+gscv = GridSearchCV(elastic_pipe, param_grid=alphas, cv = 5, scoring='r2')
+
+fitted_grid = gscv.fit(X,y)
+
+best_alpha = fitted_grid.best_params_['elastic_regression__alpha']
+
+elastic_pipe = fitted_grid.best_estimator_
 
 # Fitting pipeline to entire dataset
 elastic_fitted = elastic_pipe.fit(X,y)
@@ -442,7 +484,10 @@ comparing_coeffs
 Using only the five best variables.
 
 ```{python}
-# Running linear regression for only number of putouts a player has
+# Running linear regression for the best numerical variables.
+
+# Defining new X
+X = df[['Hits', 'RBI', 'AtBat', 'Walks', 'PutOuts']]
 
 # Setting up new column transformer
 ct = ColumnTransformer(
@@ -479,13 +524,26 @@ comparing_coeffs
 ```
 
 ```{python}
-# Running ridge regression for only number of putouts a player has
+# Running ridge regression for for the best numerical variables.
 
 # Setting up pipeline
 ridge_pipe = Pipeline(
   [("preprocessing", ct),
-  ("ridge_regression", Ridge(alpha=100))]
+  ("ridge_regression", Ridge())]
 )
+
+
+# Defining the alpha values
+alphas = {'ridge_regression__alpha': np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001])}
+
+# Defining the grid search cross validation on the ridge pipeline 
+gscv = GridSearchCV(ridge_pipe, param_grid=alphas, cv = 5, scoring='r2')
+
+fitted_grid = gscv.fit(X,y)
+
+best_alpha = fitted_grid.best_params_['ridge_regression__alpha']
+
+ridge_pipe = fitted_grid.best_estimator_
 
 # Fitting pipeline to entire dataset
 ridge_fitted = ridge_pipe.fit(X,y)
@@ -503,13 +561,27 @@ comparing_coeffs
 ```
 
 ```{python}
-# Running lasso regression for only number of putouts a player has
+# Running lasso regression for for the best numerical variables.
+
 
 # Setting up pipeline
 lasso_pipe = Pipeline(
   [("preprocessing", ct),
-  ("lasso_regression", Lasso(alpha=100))]
+  ("lasso_regression", Lasso())]
 )
+
+
+# Defining the alpha values
+alphas = {'lasso_regression__alpha': np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001])}
+
+# Defining the grid search cross validation on the ridge pipeline 
+gscv = GridSearchCV(lasso_pipe, param_grid=alphas, cv = 5, scoring='r2')
+
+fitted_grid = gscv.fit(X,y)
+
+best_alpha = fitted_grid.best_params_['lasso_regression__alpha']
+
+lasso_pipe = fitted_grid.best_estimator_
 
 # Fitting pipeline to entire dataset
 lasso_fitted = lasso_pipe.fit(X,y)
@@ -527,13 +599,27 @@ comparing_coeffs
 ```
 
 ```{python}
-# Running elastic net regression for only number of putouts a player has
+# Running elastic net regression for the best numerical variables.
+
 
 # Setting up pipeline
 elastic_pipe = Pipeline(
   [("preprocessing", ct),
-  ("elastic_regression", ElasticNet(alpha=1, l1_ratio=0.5))]
+  ("elastic_regression", ElasticNet())]
 )
+
+# Defining the alpha and l1 ratio values
+alphas = {'elastic_regression__alpha': np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001]),
+         'elastic_regression__l1_ratio': np.array([0.001, 0.0001, 0.00001, 0.000001, 0.0000001])}
+
+# Defining the grid search cross validation on the ridge pipeline 
+gscv = GridSearchCV(elastic_pipe, param_grid=alphas, cv = 5, scoring='r2')
+
+fitted_grid = gscv.fit(X,y)
+
+best_alpha = fitted_grid.best_params_['elastic_regression__alpha']
+
+elastic_pipe = fitted_grid.best_estimator_
 
 # Fitting pipeline to entire dataset
 elastic_fitted = elastic_pipe.fit(X,y)
@@ -554,14 +640,16 @@ comparing_coeffs
 Using the five best numeric variables and their interactions with the one best categorical variable.
 
 ```{python}
-# Running linear regression for only number of putouts a player has
+# Running linear regression for the best numerical variables.
+
+X = df[['Division', 'Hits', 'RBI', 'AtBat', 'Walks', 'PutOuts']]
 
 # Setting up new column transformer
 ct = ColumnTransformer(
     [    # Dummifying league, division, and new league
-        ('dummify', OneHotEncoder(sparse_output=False), ['Division']),
+        ('dummify', OneHotEncoder(sparse_output=False, drop='first'), ['Division']),
         # Standardizing all numeric variables
-        ('standardize', StandardScaler(), ['Hits', 'RBI', 'AtBat', 'Walks', 'PutOuts'])
+        ('standardize', StandardScaler(), ['Hits', 'RBI', 'AtBat', 'Walks', 'PutOuts']),
     ],
     remainder='drop'
 )
@@ -598,14 +686,27 @@ comparing_coeffs
 ```
 
 ```{python}
-# Running ridge regression for only number of putouts a player has
+# Running ridge regression for the best numerical variables.
+
 
 # Setting up pipeline
 ridge_pipe = Pipeline(
   [("preprocessing", ct),
    ('interaction', PolynomialFeatures(degree=2, include_bias=False, interaction_only=True)),
-   ("ridge_regression", Ridge(alpha=100))]
+   ("ridge_regression", Ridge())]
 )
+
+# Defining the alpha values
+alphas = {'ridge_regression__alpha': np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001])}
+
+# Defining the grid search cross validation on the ridge pipeline 
+gscv = GridSearchCV(ridge_pipe, param_grid=alphas, cv = 5, scoring='r2')
+
+fitted_grid = gscv.fit(X,y)
+
+best_alpha = fitted_grid.best_params_['ridge_regression__alpha']
+
+ridge_pipe = fitted_grid.best_estimator_
 
 # Fitting pipeline to entire dataset
 ridge_fitted = ridge_pipe.fit(X,y)
@@ -616,22 +717,41 @@ features = ridge_fitted.named_steps['preprocessing'].get_feature_names_out()
 # Getting all the coefficients
 coeffs = ridge_fitted.named_steps['ridge_regression'].coef_
 
+# Defining names after categorical and numerical interaction
+polynomial = ridge_fitted.named_steps['interaction']
+polynomial_names = polynomial.get_feature_names_out(features)
+
 
 # Formatting coefficients and features in dataframe
+comparing_coeffs['features'] = polynomial_names
 comparing_coeffs["Ridge"] = coeffs
 
 comparing_coeffs
 ```
 
 ```{python}
-# Running lasso regression for only number of putouts a player has
+# Running lasso regression for the best numerical variables.
+
 
 # Setting up pipeline
 lasso_pipe = Pipeline(
   [("preprocessing", ct),
    ('interaction', PolynomialFeatures(degree=2, include_bias=False, interaction_only=True)),
-  ("lasso_regression", Lasso(alpha=100))]
+  ("lasso_regression", Lasso())]
 )
+
+
+# Defining the alpha values
+alphas = {'lasso_regression__alpha': np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001])}
+
+# Defining the grid search cross validation on the ridge pipeline 
+gscv = GridSearchCV(lasso_pipe, param_grid=alphas, cv = 5, scoring='r2')
+
+fitted_grid = gscv.fit(X,y)
+
+best_alpha = fitted_grid.best_params_['lasso_regression__alpha']
+
+lasso_pipe = fitted_grid.best_estimator_
 
 # Fitting pipeline to entire dataset
 lasso_fitted = lasso_pipe.fit(X,y)
@@ -642,21 +762,43 @@ features = lasso_fitted.named_steps['preprocessing'].get_feature_names_out()
 # Getting all the coefficients
 coeffs = lasso_fitted.named_steps['lasso_regression'].coef_
 
+# Defining names after categorical and numerical interaction
+polynomial = lasso_fitted.named_steps['interaction']
+polynomial_names = polynomial.get_feature_names_out(features)
+
+
 # Formatting coefficients and features in dataframe
+comparing_coeffs['features'] = polynomial_names
 comparing_coeffs["Lasso"] = coeffs
+
 
 comparing_coeffs
 ```
 
 ```{python}
-# Running elastic net regression for only number of putouts a player has
+# Running elastic net regression for the best numerical variables.
+
 
 # Setting up pipeline
 elastic_pipe = Pipeline(
   [("preprocessing", ct),
    ('interaction', PolynomialFeatures(degree=2, include_bias=False, interaction_only=True)),
-  ("elastic_regression", ElasticNet(alpha=1, l1_ratio=0.5))]
+  ("elastic_regression", ElasticNet())]
 )
+
+# Defining the alpha and l1 ratio values
+alphas = {'elastic_regression__alpha': np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001]),
+         'elastic_regression__l1_ratio': np.array([0.001, 0.0001, 0.00001, 0.000001, 0.0000001])}
+
+# Defining the grid search cross validation on the ridge pipeline 
+gscv = GridSearchCV(elastic_pipe, param_grid=alphas, cv = 5, scoring='r2')
+
+fitted_grid = gscv.fit(X,y)
+
+best_alpha = fitted_grid.best_params_['elastic_regression__alpha']
+
+elastic_pipe = fitted_grid.best_estimator_
+
 
 # Fitting pipeline to entire dataset
 elastic_fitted = elastic_pipe.fit(X,y)
@@ -667,15 +809,23 @@ features = elastic_fitted.named_steps['preprocessing'].get_feature_names_out()
 # Getting all the coefficients
 coeffs = elastic_fitted.named_steps['elastic_regression'].coef_
 
+# Defining names after categorical and numerical interaction
+polynomial = elastic_fitted.named_steps['interaction']
+polynomial_names = polynomial.get_feature_names_out(features)
+
 # Formatting coefficients and features in dataframe
-comparing_coeffs["elastic"] = coeffs
+comparing_coeffs['features'] = polynomial_names
+comparing_coeffs["Elastic"] = coeffs
 
 comparing_coeffs
+
 ```
 
 Report which combination of features and model performed best, based on the validation metric of MSE.
 
 ```{python}
+
+
 
 ```
 
