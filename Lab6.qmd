@@ -284,8 +284,8 @@ pd.DataFrame({
 
 Fit the pipeline with your chosen hyperparameters to the full dataset, and interpret a few of the most important coefficients.
 
+
 ```{python}
-elastic_full = fitted_grid.best_estimator_
 
 comparing_coeffs['elastic'] = elastic_full.named_steps['elastic_regression'].coef_
 
@@ -312,23 +312,374 @@ Based on the above results, decide on:
 
 Which numeric variable is most important.
 
+_Most important numeric variable: Number of putouts that a player has._
+
 Which five numeric variables are most important
 
+_1. Number of hits (Hits)_
+_2. Number of times at bat (AtBat)_
+_3. Number of runs batted (RBI)_
+_4. Number of walks (Walks)_
+_5. Number of Put outs (put outs)_
+
 Which categorical variable is most important
+
+_The most important categorical variable is if the player plays in the East division._
 
 For each of the four model specifications, compare the following possible feature sets:
 
 Using only the one best numeric variable.
 
+```{python}
+# Running linear regression for only number of putouts a player has
+
+# Setting up new column transformer
+ct = ColumnTransformer(
+    [   # Standardizing all numeric variables
+        ('standardize', StandardScaler(), ['PutOuts'])
+    ],
+    remainder='drop'
+)
+
+# Setting up pipeline
+lr_pipe = Pipeline(
+  [("preprocessing", ct),
+  ("linear_regression", LinearRegression())]
+)
+
+# Fitting pipeline to entire dataset
+lr_fitted = lr_pipe.fit(X,y)
+
+# Getting all the feature names from the fitted column transformer steps - dummify and standardizing variables
+features = lr_fitted.named_steps['preprocessing'].get_feature_names_out()
+
+# Getting all the coefficients
+coeffs = lr_fitted.named_steps['linear_regression'].coef_
+
+# Initializing dataframe to put coefficients in
+comparing_coeffs = pd.DataFrame()
+
+# Formatting coefficients and features in dataframe
+comparing_coeffs['features'] = features
+comparing_coeffs["LR"] = coeffs
+
+comparing_coeffs
+
+```
+
+```{python}
+# Running ridge regression for only number of putouts a player has
+
+# Setting up pipeline
+ridge_pipe = Pipeline(
+  [("preprocessing", ct),
+  ("ridge_regression", Ridge(alpha=100))]
+)
+
+# Fitting pipeline to entire dataset
+ridge_fitted = ridge_pipe.fit(X,y)
+
+# Getting all the feature names from the fitted column transformer steps - dummify and standardizing variables
+features = ridge_fitted.named_steps['preprocessing'].get_feature_names_out()
+
+# Getting all the coefficients
+coeffs = ridge_fitted.named_steps['ridge_regression'].coef_
+
+# Formatting coefficients and features in dataframe
+comparing_coeffs["Ridge"] = coeffs
+
+comparing_coeffs
+```
+
+```{python}
+# Running lasso regression for only number of putouts a player has
+
+# Setting up pipeline
+lasso_pipe = Pipeline(
+  [("preprocessing", ct),
+  ("lasso_regression", Lasso(alpha=100))]
+)
+
+# Fitting pipeline to entire dataset
+lasso_fitted = lasso_pipe.fit(X,y)
+
+# Getting all the feature names from the fitted column transformer steps - dummify and standardizing variables
+features = lasso_fitted.named_steps['preprocessing'].get_feature_names_out()
+
+# Getting all the coefficients
+coeffs = lasso_fitted.named_steps['lasso_regression'].coef_
+
+# Formatting coefficients and features in dataframe
+comparing_coeffs["Lasso"] = coeffs
+
+comparing_coeffs
+```
+
+```{python}
+# Running elastic net regression for only number of putouts a player has
+
+# Setting up pipeline
+elastic_pipe = Pipeline(
+  [("preprocessing", ct),
+  ("elastic_regression", ElasticNet(alpha=1, l1_ratio=0.5))]
+)
+
+# Fitting pipeline to entire dataset
+elastic_fitted = elastic_pipe.fit(X,y)
+
+# Getting all the feature names from the fitted column transformer steps - dummify and standardizing variables
+features = elastic_fitted.named_steps['preprocessing'].get_feature_names_out()
+
+# Getting all the coefficients
+coeffs = elastic_fitted.named_steps['elastic_regression'].coef_
+
+# Formatting coefficients and features in dataframe
+comparing_coeffs["elastic"] = coeffs
+
+comparing_coeffs
+```
+
 Using only the five best variables.
+
+```{python}
+# Running linear regression for only number of putouts a player has
+
+# Setting up new column transformer
+ct = ColumnTransformer(
+    [   # Standardizing all numeric variables
+        ('standardize', StandardScaler(), ['Hits', 'RBI', 'AtBat', 'Walks', 'PutOuts'])
+    ],
+    remainder='drop'
+)
+
+# Setting up pipeline
+lr_pipe = Pipeline(
+  [("preprocessing", ct),
+  ("linear_regression", LinearRegression())]
+)
+
+# Fitting pipeline to entire dataset
+lr_fitted = lr_pipe.fit(X,y)
+
+# Getting all the feature names from the fitted column transformer steps - dummify and standardizing variables
+features = lr_fitted.named_steps['preprocessing'].get_feature_names_out()
+
+# Getting all the coefficients
+coeffs = lr_fitted.named_steps['linear_regression'].coef_
+
+# Initializing dataframe to put coefficients in
+comparing_coeffs = pd.DataFrame()
+
+# Formatting coefficients and features in dataframe
+comparing_coeffs['features'] = features
+comparing_coeffs["LR"] = coeffs
+
+comparing_coeffs
+
+```
+
+```{python}
+# Running ridge regression for only number of putouts a player has
+
+# Setting up pipeline
+ridge_pipe = Pipeline(
+  [("preprocessing", ct),
+  ("ridge_regression", Ridge(alpha=100))]
+)
+
+# Fitting pipeline to entire dataset
+ridge_fitted = ridge_pipe.fit(X,y)
+
+# Getting all the feature names from the fitted column transformer steps - dummify and standardizing variables
+features = ridge_fitted.named_steps['preprocessing'].get_feature_names_out()
+
+# Getting all the coefficients
+coeffs = ridge_fitted.named_steps['ridge_regression'].coef_
+
+# Formatting coefficients and features in dataframe
+comparing_coeffs["Ridge"] = coeffs
+
+comparing_coeffs
+```
+
+```{python}
+# Running lasso regression for only number of putouts a player has
+
+# Setting up pipeline
+lasso_pipe = Pipeline(
+  [("preprocessing", ct),
+  ("lasso_regression", Lasso(alpha=100))]
+)
+
+# Fitting pipeline to entire dataset
+lasso_fitted = lasso_pipe.fit(X,y)
+
+# Getting all the feature names from the fitted column transformer steps - dummify and standardizing variables
+features = lasso_fitted.named_steps['preprocessing'].get_feature_names_out()
+
+# Getting all the coefficients
+coeffs = lasso_fitted.named_steps['lasso_regression'].coef_
+
+# Formatting coefficients and features in dataframe
+comparing_coeffs["Lasso"] = coeffs
+
+comparing_coeffs
+```
+
+```{python}
+# Running elastic net regression for only number of putouts a player has
+
+# Setting up pipeline
+elastic_pipe = Pipeline(
+  [("preprocessing", ct),
+  ("elastic_regression", ElasticNet(alpha=1, l1_ratio=0.5))]
+)
+
+# Fitting pipeline to entire dataset
+elastic_fitted = elastic_pipe.fit(X,y)
+
+# Getting all the feature names from the fitted column transformer steps - dummify and standardizing variables
+features = elastic_fitted.named_steps['preprocessing'].get_feature_names_out()
+
+# Getting all the coefficients
+coeffs = elastic_fitted.named_steps['elastic_regression'].coef_
+
+# Formatting coefficients and features in dataframe
+comparing_coeffs["elastic"] = coeffs
+
+comparing_coeffs
+```
+
 
 Using the five best numeric variables and their interactions with the one best categorical variable.
 
+```{python}
+# Running linear regression for only number of putouts a player has
+
+# Setting up new column transformer
+ct = ColumnTransformer(
+    [    # Dummifying league, division, and new league
+        ('dummify', OneHotEncoder(sparse_output=False), ['Division']),
+        # Standardizing all numeric variables
+        ('standardize', StandardScaler(), ['Hits', 'RBI', 'AtBat', 'Walks', 'PutOuts'])
+    ],
+    remainder='drop'
+)
+
+# Setting up pipeline
+lr_pipe = Pipeline(
+  [("preprocessing", ct),
+   ('interaction', PolynomialFeatures(degree=2, include_bias=False, interaction_only=True)),
+  ("linear_regression", LinearRegression())]
+)
+
+# Fitting pipeline to entire dataset
+lr_fitted = lr_pipe.fit(X,y)
+
+# Getting all the feature names from the fitted column transformer steps - dummify and standardizing variables
+features = lr_fitted.named_steps['preprocessing'].get_feature_names_out()
+
+# Getting all the coefficients
+coeffs = lr_fitted.named_steps['linear_regression'].coef_
+
+# Defining names after categorical and numerical interaction
+polynomial = lr_fitted.named_steps['interaction']
+polynomial_names = polynomial.get_feature_names_out(features)
+
+# Initializing dataframe to put coefficients in
+comparing_coeffs = pd.DataFrame()
+
+# Formatting coefficients and features in dataframe
+comparing_coeffs['features'] = polynomial_names
+comparing_coeffs["LR"] = coeffs
+
+comparing_coeffs
+
+```
+
+```{python}
+# Running ridge regression for only number of putouts a player has
+
+# Setting up pipeline
+ridge_pipe = Pipeline(
+  [("preprocessing", ct),
+   ('interaction', PolynomialFeatures(degree=2, include_bias=False, interaction_only=True)),
+   ("ridge_regression", Ridge(alpha=100))]
+)
+
+# Fitting pipeline to entire dataset
+ridge_fitted = ridge_pipe.fit(X,y)
+
+# Getting all the feature names from the fitted column transformer steps - dummify and standardizing variables
+features = ridge_fitted.named_steps['preprocessing'].get_feature_names_out()
+
+# Getting all the coefficients
+coeffs = ridge_fitted.named_steps['ridge_regression'].coef_
+
+
+# Formatting coefficients and features in dataframe
+comparing_coeffs["Ridge"] = coeffs
+
+comparing_coeffs
+```
+
+```{python}
+# Running lasso regression for only number of putouts a player has
+
+# Setting up pipeline
+lasso_pipe = Pipeline(
+  [("preprocessing", ct),
+   ('interaction', PolynomialFeatures(degree=2, include_bias=False, interaction_only=True)),
+  ("lasso_regression", Lasso(alpha=100))]
+)
+
+# Fitting pipeline to entire dataset
+lasso_fitted = lasso_pipe.fit(X,y)
+
+# Getting all the feature names from the fitted column transformer steps - dummify and standardizing variables
+features = lasso_fitted.named_steps['preprocessing'].get_feature_names_out()
+
+# Getting all the coefficients
+coeffs = lasso_fitted.named_steps['lasso_regression'].coef_
+
+# Formatting coefficients and features in dataframe
+comparing_coeffs["Lasso"] = coeffs
+
+comparing_coeffs
+```
+
+```{python}
+# Running elastic net regression for only number of putouts a player has
+
+# Setting up pipeline
+elastic_pipe = Pipeline(
+  [("preprocessing", ct),
+   ('interaction', PolynomialFeatures(degree=2, include_bias=False, interaction_only=True)),
+  ("elastic_regression", ElasticNet(alpha=1, l1_ratio=0.5))]
+)
+
+# Fitting pipeline to entire dataset
+elastic_fitted = elastic_pipe.fit(X,y)
+
+# Getting all the feature names from the fitted column transformer steps - dummify and standardizing variables
+features = elastic_fitted.named_steps['preprocessing'].get_feature_names_out()
+
+# Getting all the coefficients
+coeffs = elastic_fitted.named_steps['elastic_regression'].coef_
+
+# Formatting coefficients and features in dataframe
+comparing_coeffs["elastic"] = coeffs
+
+comparing_coeffs
+```
+
 Report which combination of features and model performed best, based on the validation metric of MSE.
 
-(Note: 
- and 
- must be re-tuned for each feature set.)
+```{python}
+
+```
+
+(Note: lambda and alpha must be re-tuned for each feature set.)
 
 Part III. Discussion
 A. Ridge
