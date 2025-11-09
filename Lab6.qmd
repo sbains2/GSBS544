@@ -16,8 +16,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.compose import make_column_selector, ColumnTransformer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder, PolynomialFeatures
 from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.metrics import r2_score
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
+from sklearn.metrics import r2_score, mean_squared_error
 import math
 
 # Importing the data and doing some checks
@@ -91,8 +91,9 @@ coeffs = fitted.named_steps['linear_regression'].coef_
 comparing_coeffs = pd.DataFrame()
 
 # Formatting coefficients and features in dataframe
-comparing_coeffs["coeffs"] = coeffs
 comparing_coeffs['features'] = features
+comparing_coeffs["LR"] = coeffs
+
 
 comparing_coeffs
 ```
@@ -102,13 +103,12 @@ Interpretation:
 iii. Use cross-validation to estimate the MSE you would expect if you used this pipeline to predict 1989 salaries.
 
 ```{python}
-# Finding cross validation scores
-scores = cross_val_score(fitted, X, y, cv=5, scoring='r2')
+# Finding cross validation scores - r2 and mse
+r2scores = cross_val_score(pipe, X, y, cv=5, scoring='r2')
+mse = -cross_val_score(pipe, X, y, cv=5, scoring='neg_mean_squared_error')
 
-# predicting on the fitted model
-y_preds = fitted.predict(X_test)
 
-print('CV R2 scores:', scores, 'mean squared error:', mean_squared_error(y_test, y_preds))
+print('CV R2 scores:', r2scores.mean(), 'mean squared error:', mse.mean())
 
 ```
 
@@ -152,21 +152,23 @@ pd.DataFrame(data = {"alphas": np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0
 Fit the pipeline with your chosen lambda to the full dataset, and interpret a few of the most important coefficients.
 
 ```{python}
+# Extracting best lambda
+best_lambda = fitted_grid.best_params_['ridge_regression__alpha']
+best_lambda
 
-# Initializing new dataframe
-coeffs = pd.DataFrame()
+ridge_full = fitted_grid.best_estimator_
+```
+
+```{python}
 
 # Creating column to see all the features along with the ridge regression coeffiicents
-coeffs['features'] = ridge_pipe_fitted.named_steps['standardizing'].get_feature_names_out()
-coeffs['ridge'] = ridge_pipe_fitted.named_steps['ridge_regression'].coef_
+comparing_coeffs['features'] = ridge_full.named_steps['standardizing'].get_feature_names_out()
+comparing_coeffs['ridge'] = ridge_full.named_steps['ridge_regression'].coef_
 
-coeffs
-
+comparing_coeffs
 ```
 
 In interpreting some of the most important coefficients, we can see that for every 1 increase standard deviation in number of runs in a players career, the salary is expected to increase by $321.88. Another significant factor would be the number of hits in 1986, where every standard deviation increase in the number of hits translates to an increase in the salary by $286.92.
-
-
 
 Report the MSE you would expect if you used this pipeline to predict 1989 salaries.
 
@@ -205,6 +207,12 @@ gscv = GridSearchCV(lasso_pipe, param_grid=alphas, cv = 5, scoring='r2')
 
 fitted_grid = gscv.fit(X,y)
 
+# Finding the best estimator for the lasso regression
+lasso_best_estimator = fitted_grid.best_params_['lasso_regression__alpha']
+
+# Fitting the lasso pipe to the full dataset
+lasso_full = fitted_grid.best_estimator_
+
 # Creating a dataframe of the differing values of alphas and the scores of the fitted grid search cross val scores
 pd.DataFrame(data = {"alphas": np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001]), "scores": fitted_grid.cv_results_['mean_test_score']})
 
@@ -214,8 +222,15 @@ pd.DataFrame(data = {"alphas": np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0
 Fit the pipeline with your chosen lambda to the full dataset, and interpret a few of the most important coefficients.
 
 ```{python}
-coeffs['lasso'] = lasso_pipe_fitted.named_steps['lasso_regression'].coef_
+comparing_coeffs
+```
 
+```{python}
+lasso_coeffs = lasso_full.named_steps['lasso_regression'].coef_
+
+comparing_coeffs['lasso'] = lasso_full.named_steps['lasso_regression'].coef_
+
+comparing_coeffs
 ```
 In interpreting the most important coefficients after fitting a lasso regression, we see that a 1 sd increase in the number of walks that a player has a $9.95 increase in a players salary. In addition to this, for every 1 sd increase in the number of put outs that a player has, a player's salary increases by $7.57.
 
@@ -233,7 +248,7 @@ D. Elastic Net
 Create a pipeline that includes all the columns as predictors for Salary, and performs ordinary ridge regression
 
 ```{python}
-# Creating a pipeline that performs ordinary lasso regression
+# Creating a pipeline that performs ordinary elastic regression
 elastic_pipe = Pipeline(
     [
         ('standardizing', ct), # using the original standardizing column transformer
@@ -270,10 +285,16 @@ pd.DataFrame({
 Fit the pipeline with your chosen hyperparameters to the full dataset, and interpret a few of the most important coefficients.
 
 ```{python}
-coeffs['elastic'] = elastic_pipe_fitted.named_steps['elastic_regression'].coef_
+elastic_full = fitted_grid.best_estimator_
 
-coeffs
+comparing_coeffs['elastic'] = elastic_full.named_steps['elastic_regression'].coef_
+
+comparing_coeffs
 ```
+
+Interpretation:
+When interpreting the coefficients for the elastic net regression methods, for every 1 SD increase in the number of putouts that a player has, their salary goes up by $41.04. Additionally, when the number of runs batted increases by 1 SD, we see that a player's salary is expected to increase on average by $35.65.
+
 
 Report the MSE you would expect if you used this pipeline to predict 1989 salaries.
 
