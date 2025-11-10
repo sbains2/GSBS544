@@ -99,6 +99,7 @@ comparing_coeffs
 ```
 
 Interpretation:
+A few of the most important coefficients are Career runs, number of times at bat during career, and number of times at bat. Where for every 1 SD increase in these variables, the salary increases by ~480$, ~-391$, ~-291$ respectively
 
 iii. Use cross-validation to estimate the MSE you would expect if you used this pipeline to predict 1989 salaries.
 
@@ -650,8 +651,7 @@ X = df[['Division', 'Hits', 'RBI', 'AtBat', 'Walks', 'PutOuts']]
 ct = ColumnTransformer(
     [    # Dummifying league, division, and new league
         ('dummify', OneHotEncoder(sparse_output=False, drop='first', handle_unknown='ignore'), ['Division']),
-        # Standardizing all numeric variables
-        ('standardize', StandardScaler(), ['Hits', 'RBI', 'AtBat', 'Walks', 'PutOuts']),
+        ('standardize', StandardScaler(), ['Hits', 'RBI', 'AtBat', 'Walks', 'PutOuts'])
     ],
     remainder='drop'
 )
@@ -660,6 +660,8 @@ ct = ColumnTransformer(
 lr_pipe = Pipeline(
   [("preprocessing", ct),
    ('interaction', PolynomialFeatures(degree=2, include_bias=False, interaction_only=True)),
+    # Standardizing all numeric variables
+    ('standardize', StandardScaler()),
   ("linear_regression", LinearRegression())]
 )
 
@@ -695,6 +697,8 @@ print(comparing_coeffs)
 ridge_pipe = Pipeline(
   [("preprocessing", ct),
    ('interaction', PolynomialFeatures(degree=2, include_bias=False, interaction_only=True)),
+    # Standardizing all numeric variables
+    ('standardize', StandardScaler()),
    ("ridge_regression", Ridge())]
 )
 
@@ -728,7 +732,7 @@ polynomial_names = polynomial.get_feature_names_out(features)
 comparing_coeffs['features'] = polynomial_names
 comparing_coeffs["Ridge"] = coeffs
 
-print(comparing_coeffs, -gscv.best_score_) # 145836.197
+print(comparing_coeffs, -gscv.best_score_) # 145160.99
 
 ```
 
@@ -740,6 +744,8 @@ print(comparing_coeffs, -gscv.best_score_) # 145836.197
 lasso_pipe = Pipeline(
   [("preprocessing", ct),
    ('interaction', PolynomialFeatures(degree=2, include_bias=False, interaction_only=True)),
+    # Standardizing all numeric variables
+    ('standardize', StandardScaler()),
   ("lasso_regression", Lasso())]
 )
 
@@ -775,7 +781,7 @@ comparing_coeffs['features'] = polynomial_names
 comparing_coeffs["Lasso"] = coeffs
 
 
-print(comparing_coeffs, -gscv.best_score_) # 144690.1986
+print(comparing_coeffs, -gscv.best_score_) # 144308.87
 ```
 
 ```{python}
@@ -786,6 +792,8 @@ print(comparing_coeffs, -gscv.best_score_) # 144690.1986
 elastic_pipe = Pipeline(
   [("preprocessing", ct),
    ('interaction', PolynomialFeatures(degree=2, include_bias=False, interaction_only=True)),
+    # Standardizing all numeric variables
+    ('standardize', StandardScaler()),
   ("elastic_regression", ElasticNet(max_iter=1000))]
 )
 
@@ -820,12 +828,12 @@ polynomial_names = polynomial.get_feature_names_out(features)
 comparing_coeffs['features'] = polynomial_names
 comparing_coeffs["Elastic"] = coeffs
 
-print(comparing_coeffs, -gscv.best_score_) # 145461.321
+print(comparing_coeffs, -gscv.best_score_) # 144993.25
 
 ```
 
 Report which combination of features and model performed best, based on the validation metric of MSE.
-_The lasso model with the five best numeric variables and Division Interactions performed best in part 2, with a cross validation MSE of ~144,690. The elastic net regression model and the ridge regression model followed closely, at 145,461 and 145,836, respectively._
+_The lasso model with the five best numeric variables and Division Interactions performed best in part 2, with a cross validation MSE of ~144,309. The elastic net regression model and the ridge regression model followed closely, at 145,161 and 144,993, respectively._
 
 (Note: lambda and alpha must be re-tuned for each feature set.)
 
@@ -833,20 +841,82 @@ Part III. Discussion
 A. Ridge
 Compare your Ridge models with your ordinary regression models. How did your coefficients compare? Why does this make sense?
 
-__
+_The ridge moels produced smaller, more regularized coefficients than the ordinary linear regression model. Overall, this makes sense because Ridge applies an L2 penalty that shrinks large coefficients towrad zero, reducing sensitivity to multicollinearity. Compared to the baseline OLS MSE of about 112,677, ridge achieved a comparable test MSE of around 126,552 and a lower cross-validation MSE of ~145,161 in the reduced feature set with interactions. This trade off with slightly higher bias for reduced variance results in more stable predictions across different subsets of the data._
 
 B. LASSO
 Compare your LASSO model in I with your three LASSO models in II. Did you get the same 
  results? Why does this make sense? Did you get the same MSEs? Why does this make sense?
 
-__
+_The Lasso models in part 2 led to sparser solutions than in part 1, with several of the coefficients shrunk exactly to 0. This aligns with Lasso's L1 regularization, which performs variable selection in addition to shrinkage. The part 1 lasso had an MSE of 126,212, while the best model, which used the five key numeric variables and Division interactions, achieved a remarkably lower cross validation MSE of ~144,309, the lowest acros all models. This improvement reflects how Lasso effectively removed uninformative predictors and optimized the bias-variance balance, enhancing predictive accuracy and interpretability._
 
 C. Elastic Net
 Compare your MSEs for the Elastic Net models with those for the Ridge and LASSO models. Why does it make sense that Elastic Net always “wins”?
 
-__
+_Elastic Net's performance consistently fell between Ridge and Lasso, combining the strengths of both penalties. In the final interaction model, Elastic Net achieved a cross validation MSE of ~144,993, slightly higher than Lasso, which was around 144,309. This was lower than Ridge, which was about 145,161. This makes sense, becuase Elastic Net takes L1's feature selection ability with L2's coefficient stability, making it effective when predictors are correlated. The balance between sparsity and smooth shirnkage allowed Elastic Net to perform robustly across all feature configurations._
 
 Part IV: Final Model
 Fit your final best pipeline on the full dataset, and summarize your results in a few short sentences and a plot.
 
-__
+
+```{python}
+# Fitting best pipeline to the full dataset - Lasso with 5 best numeric variables and Division interaction
+
+# Defining X and y
+X = df[['Division', 'Hits', 'RBI', 'AtBat', 'Walks', 'PutOuts']]
+y = df['Salary']
+
+# Setting up Column Transformer
+ct = ColumnTransformer(
+    [    # Dummifying league, division, and new league
+        ('dummify', OneHotEncoder(sparse_output=False, drop='first', handle_unknown='ignore'), ['Division']),
+        ('standardize', StandardScaler(), ['Hits', 'RBI', 'AtBat', 'Walks', 'PutOuts'])
+    ],
+    remainder='drop'
+)
+
+# Setting up final lasso pipeline
+lasso_pipe = Pipeline(
+  [("preprocessing", ct),
+   ('interaction', PolynomialFeatures(degree=2, include_bias=False, interaction_only=True)),
+    # Standardizing all numeric variables
+    ('standardize', StandardScaler()),
+  ("lasso_regression", Lasso(alpha=best_alpha))]
+)
+
+# Fitting the model to the full dataset
+final_lasso_fitted = lasso_pipe.fit(X,y)
+
+# Extracting the feature names and coeffs
+features = final_lasso_fitted.named_steps['preprocessing'].get_feature_names_out()
+poly = final_lasso_fitted.named_steps['interaction']
+poly_names = poly.get_feature_names_out(features)
+coeffs = final_lasso_fitted.named_steps['lasso_regression'].coef_
+
+# Creating a df of coeffs
+final_coeffs = pd.DataFrame({'Feature': poly_names, 'Coefficient': coeffs}).sort_values('Coefficient', ascending=False)
+
+final_coeffs
+```
+
+
+```{python}
+# Plotting the top coefficients
+
+# Getting the top 10 coefficients from the dataframe
+top10 = final_coeffs.head(10)
+
+# Creatting ggplot bar plot of the coefficients
+(
+    ggplot(top10, aes(x='Feature', y='Coefficient', fill='Coefficient'))
+    + geom_bar(stat='identity')
+    + coord_flip()
+    + labs(
+        title='Top 10 Coefficients in the Final Lasso Model',
+        x='Feature',
+        y='Coefficient value'
+    )
+    + theme_minimal()
+)
+```
+
+Interpretation: The final model uses a lasso regression with the 5 most important numeric variables (Hits, RBI, AtBat, PutOuts) and their interactions with Division. Standardization followed the interaction expansion to balance the coefficient magnitudes. The top predictors in the final model include combinations such as standardized_hits, dummify_Division_W_standardized_AtBat, and standardized walks, each having a positive effects on salary. Overall, this indicates that higher hitting and offensive stats, especially for players in the East/West division, are the most influential in determining salary. Conclusively, we can see that regulaization improved the predictive stability while maintaining interpretability.
