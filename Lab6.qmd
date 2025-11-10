@@ -52,7 +52,7 @@ numeric = X.select_dtypes(include=[np.number]).columns
 # Setting up column transformer
 ct = ColumnTransformer(
     [ # Dummifying league, division, and new league
-        ('dummify', OneHotEncoder(sparse_output=False, drop='first'), ['League', 'Division', 'NewLeague']),
+        ('dummify', OneHotEncoder(sparse_output=False, drop='first', handle_unknown='ignore'), ['League', 'Division', 'NewLeague']),
         # Standardizing all numeric variables
         ('standardize', StandardScaler(), numeric)
     ],
@@ -105,10 +105,10 @@ iii. Use cross-validation to estimate the MSE you would expect if you used this 
 ```{python}
 # Finding cross validation scores - r2 and mse
 r2scores = cross_val_score(pipe, X, y, cv=5, scoring='r2')
-mse = -cross_val_score(pipe, X, y, cv=5, scoring='neg_mean_squared_error')
+mse = -cross_val_score(pipe, X, y, cv=5, scoring='neg_mean_squared_error').mean()
 
 
-print('CV R2 scores:', r2scores.mean(), 'mean squared error:', mse.mean())
+print('CV R2 scores:', r2scores.mean(), 'mean squared error:', mse) # 121136.31
 
 ```
 
@@ -139,13 +139,13 @@ Use cross-validation to tune the lambda hyperparameter.
 alphas = {'ridge_regression__alpha': np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001])}
 
 # Defining the grid search cross validation on the ridge pipeline 
-gscv = GridSearchCV(ridge_pipe, param_grid=alphas, cv = 5, scoring='r2')
+gscv = GridSearchCV(ridge_pipe, param_grid=alphas, cv = 5, scoring='neg_mean_squared_error')
 
 fitted_grid = gscv.fit(X,y)
 
 # Creating a dataframe of the differing values of alphas and the scores of the fitted grid search cross val scores
-pd.DataFrame(data = {"alphas": np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001]), "scores": fitted_grid.cv_results_['mean_test_score']})
-
+print(pd.DataFrame(data = {"alphas": np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001]), "scores": fitted_grid.cv_results_['mean_test_score']}))
+print(-gscv.best_score_)
 
 ```
 
@@ -176,7 +176,7 @@ Report the MSE you would expect if you used this pipeline to predict 1989 salari
 
 y_preds = ridge_pipe_fitted.predict(X_test)
 
-print('mean squared error:', mean_squared_error(y_test, y_preds))
+print('mean squared error:', mean_squared_error(y_test, y_preds)) # 126551.99
 
 ```
 
@@ -203,7 +203,7 @@ Use cross-validation to tune the lambda hyperparameter.
 alphas = {'lasso_regression__alpha': np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001])}
 
 # Defining the grid search cross validation on the ridge pipeline 
-gscv = GridSearchCV(lasso_pipe, param_grid=alphas, cv = 5, scoring='r2')
+gscv = GridSearchCV(lasso_pipe, param_grid=alphas, cv = 5, scoring='neg_mean_squared_error')
 
 fitted_grid = gscv.fit(X,y)
 
@@ -214,9 +214,9 @@ lasso_best_estimator = fitted_grid.best_params_['lasso_regression__alpha']
 lasso_full = fitted_grid.best_estimator_
 
 # Creating a dataframe of the differing values of alphas and the scores of the fitted grid search cross val scores
-pd.DataFrame(data = {"alphas": np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001]), "scores": fitted_grid.cv_results_['mean_test_score']})
+print(pd.DataFrame(data = {"alphas": np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001]), "scores": fitted_grid.cv_results_['mean_test_score']}), -gscv.best_score_)
 
-
+# 119761.58
 ```
 
 Fit the pipeline with your chosen lambda to the full dataset, and interpret a few of the most important coefficients.
@@ -242,6 +242,7 @@ y_preds = lasso_pipe_fitted.predict(X_test)
 
 print('mean squared error:', mean_squared_error(y_test, y_preds))
 
+# 126212.36
 ```
 
 D. Elastic Net
@@ -266,19 +267,19 @@ Use cross-validation to tune the lambda and alpha hyperparameters.
 
 # Defining the alpha and l1_ratio values
 tuning = {'elastic_regression__alpha': np.array([1, 0.1, 0.01, 0.001, 0.0001]),
-          'elastic_regression__l1_ratio': np.array([0.001, 0.0001, 0.00001, 0.000001, 0.0000001])}
+          'elastic_regression__l1_ratio': np.arange(0.2, 1.0, 0.2)}
 
 # Defining the grid search cross validation on the ridge pipeline 
-gscv = GridSearchCV(elastic_pipe, param_grid=tuning, cv = 5, scoring='r2')
+gscv = GridSearchCV(elastic_pipe, param_grid=tuning, cv = 5, scoring='neg_mean_squared_error')
 
 fitted_grid = gscv.fit(X,y)
 
 # Creating a dataframe of the differing values of alphas and the scores of the fitted grid search cross val scores
-pd.DataFrame({
+print(pd.DataFrame({
     'alpha': fitted_grid.cv_results_['param_elastic_regression__alpha'].astype(float),
     'l1_ratio': fitted_grid.cv_results_["param_elastic_regression__l1_ratio"].astype(float),
-    'mean_r2': fitted_grid.cv_results_["mean_test_score"]
-}).sort_values('mean_r2', ascending=False)
+    'mean_negative_mse': fitted_grid.cv_results_["mean_test_score"]
+}).sort_values('mean_negative_mse', ascending=False), -gscv.best_score_)
 
 ```
 
@@ -304,7 +305,7 @@ Report the MSE you would expect if you used this pipeline to predict 1989 salari
 
 y_preds = elastic_pipe_fitted.predict(X_test)
 
-print('mean squared error:', mean_squared_error(y_test, y_preds))
+print('mean squared error:', mean_squared_error(y_test, y_preds)) # 148422.19
 
 ```
 
@@ -368,7 +369,7 @@ comparing_coeffs = pd.DataFrame()
 comparing_coeffs['features'] = features
 comparing_coeffs["LR"] = coeffs
 
-comparing_coeffs
+print(comparing_coeffs)
 
 ```
 
@@ -385,7 +386,7 @@ ridge_pipe = Pipeline(
 alphas = {'ridge_regression__alpha': np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001])}
 
 # Defining the grid search cross validation on the ridge pipeline 
-gscv = GridSearchCV(ridge_pipe, param_grid=alphas, cv = 5, scoring='r2')
+gscv = GridSearchCV(ridge_pipe, param_grid=alphas, cv = 5, scoring='neg_mean_squared_error')
 
 fitted_grid = gscv.fit(X,y)
 
@@ -405,7 +406,7 @@ coeffs = ridge_fitted.named_steps['ridge_regression'].coef_
 # Formatting coefficients and features in dataframe
 comparing_coeffs["Ridge"] = coeffs
 
-comparing_coeffs
+print(comparing_coeffs, -gscv.best_score_) # 193417.80
 ```
 
 ```{python}
@@ -421,7 +422,7 @@ lasso_pipe = Pipeline(
 alphas = {'lasso_regression__alpha': np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001])}
 
 # Defining the grid search cross validation on the ridge pipeline 
-gscv = GridSearchCV(lasso_pipe, param_grid=alphas, cv = 5, scoring='r2')
+gscv = GridSearchCV(lasso_pipe, param_grid=alphas, cv = 5, scoring='neg_mean_squared_error')
 
 fitted_grid = gscv.fit(X,y)
 
@@ -441,7 +442,7 @@ coeffs = lasso_fitted.named_steps['lasso_regression'].coef_
 # Formatting coefficients and features in dataframe
 comparing_coeffs["Lasso"] = coeffs
 
-comparing_coeffs
+print(comparing_coeffs, -gscv.best_score_) # 194207.36
 ```
 
 ```{python}
@@ -450,15 +451,15 @@ comparing_coeffs
 # Setting up pipeline
 elastic_pipe = Pipeline(
   [("preprocessing", ct),
-  ("elastic_regression", ElasticNet())]
+  ("elastic_regression", ElasticNet(max_iter=1000))]
 )
 
 # Defining the alpha and l1 ratio values
-alphas = {'elastic_regression__alpha': np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001]),
-         'elastic_regression__l1_ratio': np.array([0.001, 0.0001, 0.00001, 0.000001, 0.0000001])}
+tuning = {'elastic_regression__alpha': np.array([1, 0.1, 0.01, 0.001, 0.0001]),
+          'elastic_regression__l1_ratio': np.arange(0.2, 1.0, 0.2)}
 
 # Defining the grid search cross validation on the ridge pipeline 
-gscv = GridSearchCV(elastic_pipe, param_grid=alphas, cv = 5, scoring='r2')
+gscv = GridSearchCV(elastic_pipe, param_grid=tuning, cv = 5, scoring='neg_mean_squared_error')
 
 fitted_grid = gscv.fit(X,y)
 
@@ -478,7 +479,7 @@ coeffs = elastic_fitted.named_steps['elastic_regression'].coef_
 # Formatting coefficients and features in dataframe
 comparing_coeffs["elastic"] = coeffs
 
-comparing_coeffs
+print(comparing_coeffs, -gscv.best_score_) # 193305.87
 ```
 
 Using only the five best variables.
@@ -519,7 +520,7 @@ comparing_coeffs = pd.DataFrame()
 comparing_coeffs['features'] = features
 comparing_coeffs["LR"] = coeffs
 
-comparing_coeffs
+print(comparing_coeffs)
 
 ```
 
@@ -537,7 +538,7 @@ ridge_pipe = Pipeline(
 alphas = {'ridge_regression__alpha': np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001])}
 
 # Defining the grid search cross validation on the ridge pipeline 
-gscv = GridSearchCV(ridge_pipe, param_grid=alphas, cv = 5, scoring='r2')
+gscv = GridSearchCV(ridge_pipe, param_grid=alphas, cv = 5, scoring='neg_mean_squared_error')
 
 fitted_grid = gscv.fit(X,y)
 
@@ -557,7 +558,7 @@ coeffs = ridge_fitted.named_steps['ridge_regression'].coef_
 # Formatting coefficients and features in dataframe
 comparing_coeffs["Ridge"] = coeffs
 
-comparing_coeffs
+print(comparing_coeffs, -gscv.best_score_) # 152065.80
 ```
 
 ```{python}
@@ -575,7 +576,7 @@ lasso_pipe = Pipeline(
 alphas = {'lasso_regression__alpha': np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001])}
 
 # Defining the grid search cross validation on the ridge pipeline 
-gscv = GridSearchCV(lasso_pipe, param_grid=alphas, cv = 5, scoring='r2')
+gscv = GridSearchCV(lasso_pipe, param_grid=alphas, cv = 5, scoring='neg_mean_squared_error')
 
 fitted_grid = gscv.fit(X,y)
 
@@ -595,7 +596,8 @@ coeffs = lasso_fitted.named_steps['lasso_regression'].coef_
 # Formatting coefficients and features in dataframe
 comparing_coeffs["Lasso"] = coeffs
 
-comparing_coeffs
+print(comparing_coeffs, -gscv.best_score_) # 152082.74
+
 ```
 
 ```{python}
@@ -605,15 +607,15 @@ comparing_coeffs
 # Setting up pipeline
 elastic_pipe = Pipeline(
   [("preprocessing", ct),
-  ("elastic_regression", ElasticNet())]
+  ("elastic_regression", ElasticNet(max_iter=1000))]
 )
 
 # Defining the alpha and l1 ratio values
-alphas = {'elastic_regression__alpha': np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001]),
-         'elastic_regression__l1_ratio': np.array([0.001, 0.0001, 0.00001, 0.000001, 0.0000001])}
+tuning = {'elastic_regression__alpha': np.array([1, 0.1, 0.01, 0.001, 0.0001]),
+          'elastic_regression__l1_ratio': np.arange(0.2, 1.0, 0.2)}
 
 # Defining the grid search cross validation on the ridge pipeline 
-gscv = GridSearchCV(elastic_pipe, param_grid=alphas, cv = 5, scoring='r2')
+gscv = GridSearchCV(elastic_pipe, param_grid=tuning, cv = 5, scoring='neg_mean_squared_error')
 
 fitted_grid = gscv.fit(X,y)
 
@@ -633,7 +635,7 @@ coeffs = elastic_fitted.named_steps['elastic_regression'].coef_
 # Formatting coefficients and features in dataframe
 comparing_coeffs["elastic"] = coeffs
 
-comparing_coeffs
+print(comparing_coeffs, -gscv.best_score_) # 152041.06
 ```
 
 
@@ -647,7 +649,7 @@ X = df[['Division', 'Hits', 'RBI', 'AtBat', 'Walks', 'PutOuts']]
 # Setting up new column transformer
 ct = ColumnTransformer(
     [    # Dummifying league, division, and new league
-        ('dummify', OneHotEncoder(sparse_output=False, drop='first'), ['Division']),
+        ('dummify', OneHotEncoder(sparse_output=False, drop='first', handle_unknown='ignore'), ['Division']),
         # Standardizing all numeric variables
         ('standardize', StandardScaler(), ['Hits', 'RBI', 'AtBat', 'Walks', 'PutOuts']),
     ],
@@ -681,7 +683,7 @@ comparing_coeffs = pd.DataFrame()
 comparing_coeffs['features'] = polynomial_names
 comparing_coeffs["LR"] = coeffs
 
-comparing_coeffs
+print(comparing_coeffs)
 
 ```
 
@@ -700,7 +702,7 @@ ridge_pipe = Pipeline(
 alphas = {'ridge_regression__alpha': np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001])}
 
 # Defining the grid search cross validation on the ridge pipeline 
-gscv = GridSearchCV(ridge_pipe, param_grid=alphas, cv = 5, scoring='r2')
+gscv = GridSearchCV(ridge_pipe, param_grid=alphas, cv = 5, scoring='neg_mean_squared_error')
 
 fitted_grid = gscv.fit(X,y)
 
@@ -726,7 +728,8 @@ polynomial_names = polynomial.get_feature_names_out(features)
 comparing_coeffs['features'] = polynomial_names
 comparing_coeffs["Ridge"] = coeffs
 
-comparing_coeffs
+print(comparing_coeffs, -gscv.best_score_) # 145836.197
+
 ```
 
 ```{python}
@@ -745,7 +748,7 @@ lasso_pipe = Pipeline(
 alphas = {'lasso_regression__alpha': np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001])}
 
 # Defining the grid search cross validation on the ridge pipeline 
-gscv = GridSearchCV(lasso_pipe, param_grid=alphas, cv = 5, scoring='r2')
+gscv = GridSearchCV(lasso_pipe, param_grid=alphas, cv = 5, scoring='neg_mean_squared_error')
 
 fitted_grid = gscv.fit(X,y)
 
@@ -772,7 +775,7 @@ comparing_coeffs['features'] = polynomial_names
 comparing_coeffs["Lasso"] = coeffs
 
 
-comparing_coeffs
+print(comparing_coeffs, -gscv.best_score_) # 144690.1986
 ```
 
 ```{python}
@@ -783,15 +786,15 @@ comparing_coeffs
 elastic_pipe = Pipeline(
   [("preprocessing", ct),
    ('interaction', PolynomialFeatures(degree=2, include_bias=False, interaction_only=True)),
-  ("elastic_regression", ElasticNet())]
+  ("elastic_regression", ElasticNet(max_iter=1000))]
 )
 
 # Defining the alpha and l1 ratio values
-alphas = {'elastic_regression__alpha': np.array([1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001]),
-         'elastic_regression__l1_ratio': np.array([0.001, 0.0001, 0.00001, 0.000001, 0.0000001])}
+tuning = {'elastic_regression__alpha': np.array([1, 0.1, 0.01, 0.001, 0.0001]),
+          'elastic_regression__l1_ratio': np.arange(0.2, 1.0, 0.2)}
 
 # Defining the grid search cross validation on the ridge pipeline 
-gscv = GridSearchCV(elastic_pipe, param_grid=alphas, cv = 5, scoring='r2')
+gscv = GridSearchCV(elastic_pipe, param_grid=tuning, cv = 5, scoring='neg_mean_squared_error')
 
 fitted_grid = gscv.fit(X,y)
 
@@ -817,17 +820,12 @@ polynomial_names = polynomial.get_feature_names_out(features)
 comparing_coeffs['features'] = polynomial_names
 comparing_coeffs["Elastic"] = coeffs
 
-comparing_coeffs
+print(comparing_coeffs, -gscv.best_score_) # 145461.321
 
 ```
 
 Report which combination of features and model performed best, based on the validation metric of MSE.
-
-```{python}
-
-
-
-```
+_The lasso model with the five best numeric variables and Division Interactions performed best in part 2, with a cross validation MSE of ~144,690. The elastic net regression model and the ridge regression model followed closely, at 145,461 and 145,836, respectively._
 
 (Note: lambda and alpha must be re-tuned for each feature set.)
 
@@ -835,12 +833,20 @@ Part III. Discussion
 A. Ridge
 Compare your Ridge models with your ordinary regression models. How did your coefficients compare? Why does this make sense?
 
+__
+
 B. LASSO
 Compare your LASSO model in I with your three LASSO models in II. Did you get the same 
  results? Why does this make sense? Did you get the same MSEs? Why does this make sense?
 
+__
+
 C. Elastic Net
 Compare your MSEs for the Elastic Net models with those for the Ridge and LASSO models. Why does it make sense that Elastic Net always “wins”?
 
+__
+
 Part IV: Final Model
 Fit your final best pipeline on the full dataset, and summarize your results in a few short sentences and a plot.
+
+__
