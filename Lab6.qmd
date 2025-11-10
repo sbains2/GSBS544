@@ -247,7 +247,7 @@ print('mean squared error:', mean_squared_error(y_test, y_preds))
 ```
 
 D. Elastic Net
-Create a pipeline that includes all the columns as predictors for Salary, and performs ordinary ridge regression
+Create a pipeline that includes all the columns as predictors for Salary, and performs ordinary elastic net regression
 
 ```{python}
 # Creating a pipeline that performs ordinary elastic regression
@@ -838,21 +838,23 @@ _The lasso model with the five best numeric variables and Division Interactions 
 (Note: lambda and alpha must be re-tuned for each feature set.)
 
 Part III. Discussion
+NOTE: Cross validation MSEs are reported per feature set after retuning. Single test MSEs reported earlier come from full feature 80/20 split and aren't directly comparable.
+
 A. Ridge
 Compare your Ridge models with your ordinary regression models. How did your coefficients compare? Why does this make sense?
 
-_The ridge moels produced smaller, more regularized coefficients than the ordinary linear regression model. Overall, this makes sense because Ridge applies an L2 penalty that shrinks large coefficients towrad zero, reducing sensitivity to multicollinearity. Compared to the baseline OLS MSE of about 112,677, ridge achieved a comparable test MSE of around 126,552 and a lower cross-validation MSE of ~145,161 in the reduced feature set with interactions. This trade off with slightly higher bias for reduced variance results in more stable predictions across different subsets of the data._
+_The ridge models produced smaller, more regularized coefficients than the ordinary linear regression model. Overall, this makes sense because Ridge applies an L2 penalty that shrinks large coefficients towrad zero, reducing sensitivity to multicollinearity. Compared to the baseline OLS MSE of about 112,677, ridge achieved a comparable test MSE of around 126,552 and a lower cross-validation MSE of ~145,161 in the reduced feature set with interactions. This trade off with slightly higher bias for reduced variance results in more stable predictions across different subsets of the data._
 
 B. LASSO
 Compare your LASSO model in I with your three LASSO models in II. Did you get the same 
  results? Why does this make sense? Did you get the same MSEs? Why does this make sense?
 
-_The Lasso models in part 2 led to sparser solutions than in part 1, with several of the coefficients shrunk exactly to 0. This aligns with Lasso's L1 regularization, which performs variable selection in addition to shrinkage. The part 1 lasso had an MSE of 126,212, while the best model, which used the five key numeric variables and Division interactions, achieved a remarkably lower cross validation MSE of ~144,309, the lowest acros all models. This improvement reflects how Lasso effectively removed uninformative predictors and optimized the bias-variance balance, enhancing predictive accuracy and interpretability._
+_The Lasso models in part 2 led to sparser solutions than in part 1, with several of the coefficients shrunk exactly to 0. This aligns with Lasso's L1 regularization, which performs variable selection in addition to shrinkage. The part 1 lasso had an MSE of 126,212, while the best model, which used the five key numeric variables and Division interactions, achieved a remarkably lower cross validation MSE of ~144,309, the lowest across all models. This improvement reflects how Lasso effectively removed uninformative predictors and optimized the bias-variance balance, enhancing predictive accuracy and interpretability._
 
 C. Elastic Net
 Compare your MSEs for the Elastic Net models with those for the Ridge and LASSO models. Why does it make sense that Elastic Net always “wins”?
 
-_Elastic Net's performance consistently fell between Ridge and Lasso, combining the strengths of both penalties. In the final interaction model, Elastic Net achieved a cross validation MSE of ~144,993, slightly higher than Lasso, which was around 144,309. This was lower than Ridge, which was about 145,161. This makes sense, becuase Elastic Net takes L1's feature selection ability with L2's coefficient stability, making it effective when predictors are correlated. The balance between sparsity and smooth shirnkage allowed Elastic Net to perform robustly across all feature configurations._
+_Elastic Net's performance consistently fell between Ridge and Lasso, combining the strengths of both penalties. In the final interaction model, Elastic Net achieved a cross validation MSE of ~144,993, slightly higher than Lasso, which was around 144,309. This was lower than Ridge, which was about 145,161. This makes sense, because Elastic Net takes L1's feature selection ability with L2's coefficient stability, making it effective when predictors are correlated. The balance between sparsity and smooth shrinkage allowed Elastic Net to perform robustly across all feature configurations._
 
 Part IV: Final Model
 Fit your final best pipeline on the full dataset, and summarize your results in a few short sentences and a plot.
@@ -919,4 +921,4 @@ top10 = final_coeffs.head(10)
 )
 ```
 
-Interpretation: The final model uses a lasso regression with the 5 most important numeric variables (Hits, RBI, AtBat, PutOuts) and their interactions with Division. Standardization followed the interaction expansion to balance the coefficient magnitudes. The top predictors in the final model include combinations such as standardized_hits, dummify_Division_W_standardized_AtBat, and standardized walks, each having a positive effects on salary. Overall, this indicates that higher hitting and offensive stats, especially for players in the East/West division, are the most influential in determining salary. Conclusively, we can see that regulaization improved the predictive stability while maintaining interpretability.
+Interpretation: The final model uses a lasso regression with the 5 most important numeric variables (Hits, RBI, AtBat, Walks, PutOuts) and their interactions with Division. Standardization followed the interaction expansion to balance the coefficient magnitudes. The top predictors in the final model include combinations such as standardized_hits, dummify_Division_W * standardized_AtBat, and standardized walks, each having a positive effects on salary (in thousands). Overall, this indicates that higher hitting and offensive stats, especially and being in the West Division, are the most influential in determining salary. Conclusively, we can see that regulaization improved the predictive stability while maintaining interpretability.
