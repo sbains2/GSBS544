@@ -19,6 +19,7 @@ from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
 from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
 from sklearn.metrics import r2_score, mean_squared_error
 import math
+from plotnine import *
 
 # Importing the data and doing some checks
 df = pd.read_csv('hitters.csv')
@@ -162,7 +163,7 @@ ridge_full = fitted_grid.best_estimator_
 
 ```{python}
 
-# Creating column to see all the features along with the ridge regression coeffiicents
+# Creating column to see all the features along with the ridge regression coefficents
 comparing_coeffs['features'] = ridge_full.named_steps['standardizing'].get_feature_names_out()
 comparing_coeffs['ridge'] = ridge_full.named_steps['ridge_regression'].coef_
 
@@ -328,7 +329,7 @@ _5. Number of Put outs (put outs)_
 
 Which categorical variable is most important
 
-_The most important categorical variable is if the player plays in the East division._
+_The most important categorical variable is if the player plays in the West division. (vs East baseline)_
 
 For each of the four model specifications, compare the following possible feature sets:
 
@@ -464,7 +465,7 @@ gscv = GridSearchCV(elastic_pipe, param_grid=tuning, cv = 5, scoring='neg_mean_s
 
 fitted_grid = gscv.fit(X,y)
 
-best_alpha = fitted_grid.best_params_['elastic_regression__alpha']
+best_alpha_elastic = fitted_grid.best_params_['elastic_regression__alpha']
 
 elastic_pipe = fitted_grid.best_estimator_
 
@@ -758,7 +759,7 @@ gscv = GridSearchCV(lasso_pipe, param_grid=alphas, cv = 5, scoring='neg_mean_squ
 
 fitted_grid = gscv.fit(X,y)
 
-best_alpha = fitted_grid.best_params_['lasso_regression__alpha']
+best_alpha_lasso_interact = fitted_grid.best_params_['lasso_regression__alpha']
 
 lasso_pipe = fitted_grid.best_estimator_
 
@@ -843,7 +844,7 @@ NOTE: Cross validation MSEs are reported per feature set after retuning. Single 
 A. Ridge
 Compare your Ridge models with your ordinary regression models. How did your coefficients compare? Why does this make sense?
 
-_The ridge models produced smaller, more regularized coefficients than the ordinary linear regression model. Overall, this makes sense because Ridge applies an L2 penalty that shrinks large coefficients towrad zero, reducing sensitivity to multicollinearity. Compared to the baseline OLS MSE of about 112,677, ridge achieved a comparable test MSE of around 126,552 and a lower cross-validation MSE of ~145,161 in the reduced feature set with interactions. This trade off with slightly higher bias for reduced variance results in more stable predictions across different subsets of the data._
+_The ridge models produced smaller, more regularized coefficients than the ordinary linear regression model. Overall, this makes sense because Ridge applies an L2 penalty that shrinks large coefficients toward zero, reducing sensitivity to multicollinearity. Compared to the baseline OLS MSE of about 112,677, ridge achieved a comparable test MSE of around 126,552 and a lower cross-validation MSE of ~145,161 in the reduced feature set with interactions. This trade off with slightly higher bias for reduced variance results in more stable predictions across different subsets of the data._
 
 B. LASSO
 Compare your LASSO model in I with your three LASSO models in II. Did you get the same 
@@ -882,7 +883,7 @@ lasso_pipe = Pipeline(
    ('interaction', PolynomialFeatures(degree=2, include_bias=False, interaction_only=True)),
     # Standardizing all numeric variables
     ('standardize', StandardScaler()),
-  ("lasso_regression", Lasso(alpha=best_alpha))]
+  ("lasso_regression", Lasso(alpha=best_alpha_lasso_interact))]
 )
 
 # Fitting the model to the full dataset
@@ -902,12 +903,13 @@ final_coeffs
 
 
 ```{python}
+from plotnine import *
 # Plotting the top coefficients
 
 # Getting the top 10 coefficients from the dataframe
 top10 = final_coeffs.head(10)
 
-# Creatting ggplot bar plot of the coefficients
+# Creating ggplot bar plot of the coefficients
 (
     ggplot(top10, aes(x='Feature', y='Coefficient', fill='Coefficient'))
     + geom_bar(stat='identity')
@@ -921,4 +923,4 @@ top10 = final_coeffs.head(10)
 )
 ```
 
-Interpretation: The final model uses a lasso regression with the 5 most important numeric variables (Hits, RBI, AtBat, Walks, PutOuts) and their interactions with Division. Standardization followed the interaction expansion to balance the coefficient magnitudes. The top predictors in the final model include combinations such as standardized_hits, dummify_Division_W * standardized_AtBat, and standardized walks, each having a positive effects on salary (in thousands). Overall, this indicates that higher hitting and offensive stats, especially and being in the West Division, are the most influential in determining salary. Conclusively, we can see that regulaization improved the predictive stability while maintaining interpretability.
+Interpretation: The final model uses a lasso regression with the 5 most important numeric variables (Hits, RBI, AtBat, Walks, PutOuts) and their interactions with Division. Standardization followed the interaction expansion to balance the coefficient magnitudes. The top predictors in the final model include combinations such as standardize_hits, standardize_Hits * standardize_Walks, and standardize walks, each having a positive effects on salary (in thousands). Overall, this indicates that higher hitting and offensive stats, especially and being in the West Division, are the most influential in determining salary. Conclusively, we can see that regulaization improved the predictive stability while maintaining interpretability.
