@@ -1,0 +1,176 @@
+---
+title: "Sahil Bains kNN and Decision Trees Activity (1)"
+format: html
+jupyter: python3
+---
+
+# Palmer Penguins Modeling
+
+Import the Palmer Penguins dataset and print out the first few rows.
+
+Suppose we want to predict `bill_depth_mm` using the other variables in the dataset.
+
+**Dummify** all variables that require this.
+
+```{python}
+# Code Here
+!pip install palmerpenguins
+```
+
+```{python}
+from palmerpenguins import load_penguins
+penguins = load_penguins()
+penguins.head()
+```
+
+```{python}
+import pandas as pd
+import numpy as np
+from sklearn.pipeline import Pipeline
+from sklearn.compose import make_column_selector, ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, PolynomialFeatures
+from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV, KFold, cross_val_predict
+from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.tree import DecisionTreeRegressor
+import math
+from plotnine import *
+```
+
+Let's use the other variables to predict `bill_depth_mm`. Prepare your data and fit the following models on the entire dataset:
+
+* Your best multiple linear regression model from before
+* Two kNN models (for different values of K)
+* A decision tree model
+
+Create a plot like the right plot of Fig 1. in our `Model Validation` chapter with the training and test error plotted for each of your four models.
+
+Which of your models was best?
+
+```{python}
+penguins = penguins.dropna()
+```
+
+```{python}
+# Best multiple linear regression model
+y = penguins['bill_depth_mm']
+X = pd.get_dummies(
+    penguins[['species','body_mass_g', 'island', 'flipper_length_mm', 'bill_length_mm', 'sex', 'year']],
+    columns=['species', 'island', 'sex'],
+    drop_first=True
+)
+# Splitting data into training and testing
+yt, yv, Xt, Xv = train_test_split(y, X, test_size=0.2, random_state=42)
+
+# Model
+m = LinearRegression()
+m.fit(Xt, yt)
+m.score(Xt, yt), m.score(Xv, yv)
+```
+
+```{python}
+# Two kNN models (for different values of k)
+
+# Building a pipeline that scales and initializes knn regressor
+pipe = Pipeline([
+    ('scale', StandardScaler()),
+    ('knn', KNeighborsRegressor())
+])
+
+# Choosing k and weights through cross validation
+params = {
+    'knn__n_neighbors': [3, 7, 9], # two values of k, 3 and 7
+    'knn__weights': ['uniform', 'distance']
+}
+
+cv = KFold(n_splits=5, shuffle=True, random_state=42)
+
+gscv = GridSearchCV(pipe, param_grid=params, cv=cv, scoring='r2')
+gscv.fit(Xt, yt)
+
+# Finding the best parameters
+print(gscv.best_params_)
+
+# Finding the best model
+best_model = gscv.best_estimator_
+
+# Evaluating with cross_val predict, removes the distance 0 neighbor
+# to mitigate the 'perfect score' issue
+y_pred = cross_val_predict(best_model, Xt, yt, cv=cv)
+
+# Finding r2 and mse
+r2 = r2_score(yt, y_pred)
+mse = mean_squared_error(yt, y_pred)
+
+print(r2, mse)
+```
+
+```{python}
+from sklearn.tree import plot_tree
+
+dt_pipeline = Pipeline(
+  [("standardize", StandardScaler()),
+  ("decision_tree", DecisionTreeRegressor(max_depth=3))]
+)
+
+# Tuning the regularization knobs
+params = {
+    'decision_tree__max_depth': [1, 3, 5, 7, 13],
+    'decision_tree__min_samples_leaf': [1, 3, 5, 10, 13]
+}
+cv = KFold(n_splits=5, shuffle=True, random_state=42)
+
+dt_pipeline.fit(X=Xt, y=yt)
+
+dtr_gscv = GridSearchCV(dt_pipeline, param_grid=params, cv=cv, scoring='r2')
+
+dtr_gscv.fit(Xt, yt)
+
+# Evaluating on unseen data
+y_pred = dtr_gscv.predict(Xv)
+
+# Plotting the best tree
+best_pipe = dtr_gscv.best_estimator_
+best_tree = best_pipe.named_steps['decision_tree']
+
+# Finding r2 and mse of the best DTR model
+r2 = r2_score(yv, y_pred)
+mse = mean_squared_error(yv, y_pred)
+
+print(r2, mse)
+```
+
+```{python}
+from plotnine import *
+
+# Putting all model results in a df
+results = pd.DataFrame([
+    # Multiple Linear Regression
+    {'Model': 'Multiple Linear Regression', 'Split': 'Train', 'MSE': mean_squared_error(yt, m.predict(Xt))},
+    {'Model': 'Multiple Linear Regression', 'Split': 'Test', 'MSE': mean_squared_error(yv, m.predict(Xv))},
+
+    # kNN
+    {'Model': 'kNN', 'Split': 'Train', 'MSE': mean_squared_error(yt, cross_val_predict(best_model, Xt, yt, cv=cv))},
+    {'Model': 'kNN', 'Split': 'Test', 'MSE': mean_squared_error(yv, best_model.fit(Xt, yt).predict(Xv))},
+
+    # DTR
+    {'Model': 'DTR', 'Split': 'Train', 'MSE': mean_squared_error(yt, best_tree.predict(Xt))},
+    {'Model': 'DTR', 'Split': 'Test', 'MSE': mean_squared_error(yv, best_tree.predict(Xv))},
+
+])
+
+# Plotting
+
+(
+    ggplot(results, aes(x='Model', y='MSE', color='Split', group='Split'))
+    + geom_line()
+    + geom_point()
+    + labs(x='Model', y='MSE', title='Training vs Test Error by Model')
+    + theme_minimal()
+)
+```
+
+The model with the lowest MSE was the Multiple linear regression model.
+
+
