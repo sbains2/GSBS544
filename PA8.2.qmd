@@ -13,14 +13,8 @@ Suppose we want to predict `species` using the other variables in the dataset.
 **Dummify** all variables that require this.
 
 ```{python}
-# Code Here
-!pip install palmerpenguins
-```
-
-```{python}
-from palmerpenguins import load_penguins
-penguins = load_penguins()
-penguins.head()
+import pandas as pd
+penguins = pd.read_csv('penguins.csv')
 ```
 
 ```{python}

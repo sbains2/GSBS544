@@ -1,8 +1,13 @@
 ---
-title: "Sahil Bains kNN and Decision Trees Activity (1)"
-format: html
-jupyter: python3
+title: GSBS544 PA 8.1
+author: Sahil Bains
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+echo: true
 ---
+Github Link: https://github.com/sbains2/GSBS544
 
 # Palmer Penguins Modeling
 
@@ -12,15 +17,11 @@ Suppose we want to predict `bill_depth_mm` using the other variables in the data
 
 **Dummify** all variables that require this.
 
-```{python}
-# Code Here
-!pip install palmerpenguins
-```
+
 
 ```{python}
-from palmerpenguins import load_penguins
-penguins = load_penguins()
-penguins.head()
+import pandas as pd
+penguins = pd.read_csv('penguins.csv')
 ```
 
 ```{python}
