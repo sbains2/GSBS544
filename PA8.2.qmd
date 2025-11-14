@@ -1,8 +1,13 @@
 ---
-title: "PA 8.2 (3)"
-format: html
-jupyter: python3
+title: GSBS544 PA 8.2
+author: Sahil Bains
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+echo: true
 ---
+Github Link: https://github.com/sbains2/GSBS544
 
 # Palmer Penguins Modeling
 
