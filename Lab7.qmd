@@ -1,0 +1,463 @@
+---
+title: GSBS544 Lab 7
+author: Sahil Bains
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+echo: true
+---
+Github Link: https://github.com/sbains2/GSBS544
+
+The Data
+In this lab, we will use medical data to predict the likelihood of a person experiencing an exercise-induced heart attack.
+
+Our dataset consists of clinical data from patients who entered the hospital complaining of chest pain (“angina”) during exercise. The information collected includes:
+
+age : Age of the patient
+
+sex : Sex of the patient
+
+cp : Chest Pain type
+
+Value 0: asymptomatic
+Value 1: typical angina
+Value 2: atypical angina
+Value 3: non-anginal pain
+
+trtbps : resting blood pressure (in mm Hg)
+
+chol : cholesterol in mg/dl fetched via BMI sensor
+
+restecg : resting electrocardiographic results
+
+Value 0: normal
+Value 1: having ST-T wave abnormality (T wave inversions and/or ST elevation or depression of > 0.05 mV)
+Value 2: showing probable or definite left ventricular hypertrophy by Estes’ criteria
+thalach : maximum heart rate achieved during exercise
+
+output : the doctor’s diagnosis of whether the patient is at risk for a heart attack
+
+0 = not at risk of heart attack
+1 = at risk of heart attack
+Although it is not a formal question on this assignment, you should begin by reading in the dataset and briefly exploring and summarizing the data, and by adjusting any variables that need cleaning.
+
+
+
+```{python}
+import pandas as pd
+import numpy as np
+from sklearn.pipeline import Pipeline
+from sklearn.compose import make_column_selector, ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, PolynomialFeatures
+from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet, LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import r2_score, mean_squared_error, roc_auc_score, confusion_matrix, roc_curve
+import math
+from plotnine import *
+```
+
+
+```{python}
+ha = pd.read_csv("ha.csv")
+print(ha.describe())
+print(ha.info())
+```
+
+Part One: Fitting Models
+This section asks you to create a final best model for each of the model types studied this week. For each, you should:
+
+Find the best model based on ROC AUC for predicting the target variable.
+
+Report the (cross-validated!) ROC AUC metric.
+
+Fit the final model.
+
+Output a confusion matrix; that is, the counts of how many observations fell into each predicted class for each true class.
+
+(Where applicable) Interpret the coefficients and/or estimates produced by the model fit.
+
+You should certainly try multiple model pipelines to find the best model. You do not need to include the output for every attempted model, but you should describe all of the models explored. You should include any hyperparameter tuning steps in your writeup as well.
+
+Q1: KNN
+Q2: Logistic Regression
+Q3: Decision Tree
+Q4: Interpretation, Which predictors were most important to predicting heart attack risk?
+
+Q5: ROC Curve
+Plot the ROC Curve for your three models above.
+
+## Part 1
+Q1:
+```{python}
+
+# Defining target and explanatory variables
+X = ha.drop(columns='output')
+y = ha['output']
+
+# Defining numerical and categorical features
+numeric = ['age', 'trtbps', 'chol', 'thalach']
+categorical = ['sex', 'cp', 'restecg']
+
+ct = ColumnTransformer(
+  [
+    ('numeric', StandardScaler(), numeric),
+    ('categorical', OneHotEncoder(handle_unknown='ignore'), categorical),
+  ]
+)
+
+# Splitting the data into train and testing
+Xt, Xv, yt, yv = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Developing knn pipeline
+knn_pipe = Pipeline([
+  ('prep', ct),
+  ('knn', KNeighborsClassifier())
+])
+
+# Iterating through different values of k
+knn_params = {
+  'knn__n_neighbors': [9,11,13],
+  'knn__weights': ['uniform', 'distance']
+}
+
+# Initializing grid search
+knn_search = GridSearchCV(
+  knn_pipe,
+  param_grid=knn_params,
+  cv=5,
+  scoring='roc_auc'
+)
+knn_search.fit(Xt, yt)
+
+# Finding the best estimators and parameters
+best_knn = knn_search.best_estimator_
+print('best params:', knn_search.best_params_)
+print('CV ROC AUC', round(knn_search.best_score_, 3))
+
+# Finding the test ROC AUC
+y_proba = best_knn.predict_proba(Xt)[:, 1]
+y_pred = best_knn.predict(Xt)
+print('Test ROC AUC', round(roc_auc_score(yt, y_proba), 3))
+
+# Designing the confusion matrix
+cm = pd.DataFrame(
+  confusion_matrix(yt, y_pred),
+  index=['True 0', 'True 1'],
+  columns=['Pred 0', 'Pred 1']
+)
+print(cm)
+
+```
+
+Q2:
+
+```{python}
+
+# Defining target and explanatory variables
+X = ha.drop(columns='output')
+y = ha['output']
+
+# Defining numerical and categorical features
+numeric = ['age', 'trtbps', 'chol', 'thalach']
+categorical = ['sex', 'cp', 'restecg']
+
+ct = ColumnTransformer(
+  [
+    ('numeric', StandardScaler(), numeric),
+    ('categorical', OneHotEncoder(handle_unknown='ignore'), categorical),
+  ]
+)
+
+# Developing logit pipeline
+logit_pipe = Pipeline([
+  ('prep', ct),
+  ('logit', LogisticRegression())
+])
+
+# Creating hyperparameters for the logistic regression model
+logit_params = {
+  'logit__C': [0.001, 0.01, 0.1, 1, 10, 100],
+}
+
+# Initializing grid search
+logit_search = GridSearchCV(
+  logit_pipe,
+  param_grid=logit_params,
+  cv=5,
+  scoring='roc_auc'
+)
+logit_search.fit(Xt, yt)
+
+# Finding the best estimators and parameters
+best_logit = logit_search.best_estimator_
+print('best params:', logit_search.best_params_)
+print('CV ROC AUC', round(logit_search.best_score_, 3))
+
+# Finding the test ROC AUC
+y_proba = best_logit.predict_proba(Xt)[:, 1]
+y_pred = best_logit.predict(Xt)
+print('Test ROC AUC', round(roc_auc_score(yt, y_proba), 3))
+
+# Designing the confusion matrix
+cm = pd.DataFrame(
+  confusion_matrix(yt, y_pred),
+  index=['True 0', 'True 1'],
+  columns=['Pred 0', 'Pred 1']
+)
+print(cm)
+
+```
+
+Q3:
+
+```{python}
+
+# Defining target and explanatory variables
+X = ha.drop(columns='output')
+y = ha['output']
+
+# Defining numerical and categorical features
+numeric = ['age', 'trtbps', 'chol', 'thalach']
+categorical = ['sex', 'cp', 'restecg']
+
+ct = ColumnTransformer(
+  [
+    ('numeric', StandardScaler(), numeric),
+    ('categorical', OneHotEncoder(handle_unknown='ignore'), categorical),
+  ]
+)
+
+# Developing dt pipeline
+tree_pipe = Pipeline([
+  ('prep', ct),
+  ('tree', DecisionTreeClassifier(random_state=42))
+])
+
+# Creating hyperparameters for the decision tree model
+tree_params = {
+  'tree__max_depth': [2,4,6,8],
+  'tree__min_samples_leaf': [1,3,5]
+}
+
+# Initializing grid search
+tree_search = GridSearchCV(
+  tree_pipe,
+  param_grid=tree_params,
+  cv=5,
+  scoring='roc_auc'
+)
+tree_search.fit(Xt, yt)
+
+# Finding the best estimators and parameters
+best_tree = tree_search.best_estimator_
+print('best params:', tree_search.best_params_)
+print('CV ROC AUC', round(tree_search.best_score_, 3))
+
+# Finding the test ROC AUC
+y_proba = best_tree.predict_proba(Xt)[:, 1]
+y_pred = best_tree.predict(Xt)
+print('Test ROC AUC', round(roc_auc_score(yt, y_proba), 3))
+
+# Designing the confusion matrix
+cm = pd.DataFrame(
+  confusion_matrix(yt, y_pred),
+  index=['True 0', 'True 1'],
+  columns=['Pred 0', 'Pred 1']
+)
+print(cm)
+
+```
+
+Q4: Decision Tree Classifier Most important predictors
+
+```{python}
+features = numeric + list(
+  best_tree.named_steps['prep'].named_transformers_['categorical'].get_feature_names_out(categorical)
+)
+
+importance = (
+  pd.DataFrame({
+    'feature': features,
+    'importance': best_tree.named_steps['tree'].feature_importances_
+  })
+  .sort_values('importance', ascending=False)
+)
+
+print(importance.head(5))
+
+```
+
+Interpretation:
+We're able to see that the decision tree relied most on 'thalach' (maximum heart rate) and the chest pain indicator 'cp_0', with the male indicator also appearing. Other vitals, such as resting blood pressure, cholesterol, and the remaining chest-pain categories rarely appeared in the tree, so they didn't have much importance in this model.
+
+
+Q5
+
+```{python}
+# Storing ROCs
+rocs = []
+
+# Storing all models
+models = {
+  'kNN': best_knn,
+  'Logit': best_logit,
+  'Decision Tree': best_tree
+}
+
+# Iteratoring through each trained model and its label
+for name, model in models.items():
+  # Getting the predicted probability of the postitive class on the validation set
+  y_scores = model.predict_proba(Xv)[:, 1]
+  # computign the false and true positive rates across thresholds
+  fpr, tpr, i = roc_curve(yv, y_scores)
+  # Storing model's ROC coordinates with the name
+  rocs.append(pd.DataFrame({
+    'Model': name,
+    'FPR': fpr,
+    'TPR': tpr
+  }))
+# Combining all ROC data into single DF for plotting
+roc = pd.concat(rocs, ignore_index=True)
+
+( # Initializing the ROC data into a single DF for plotting
+  ggplot(roc, aes('FPR', 'TPR', color='Model'))
+  + geom_line()
+  # adding no-skill reference line
+  + geom_abline(intercept=0, slope=1)
+  + labs(
+    title='ROC Curves for All Models',
+    x='False Positive Rate',
+    y='True Positive Rate'
+  )
+  + theme_minimal()
+)
+
+```
+
+
+## Part Two: Metrics
+Consider the following metrics:
+
+True Positive Rate or Recall or Sensitivity = Of the observations that are truly Class A, how many were predicted to be Class A?
+
+Precision or Positive Predictive Value = Of all the observations classified as Class A, how many of them were truly from Class A?
+
+True Negative Rate or Specificity or Negative Predictive Value = Of all the observations classified as NOT Class A, how many were truly NOT Class A?
+
+Compute each of these metrics (cross-validated) for your three models (KNN, Logistic Regression, and Decision Tree) in Part One.
+
+```{python}
+# Computing the cross validated metrics for the three models
+from sklearn.model_selection import KFold, cross_val_predict
+from sklearn.metrics import confusion_matrix
+
+# Refitting
+# For knn
+cv = KFold(n_splits=5, shuffle=True, random_state=42)
+y_cv_pred_knn = cross_val_predict(best_knn, Xt, yt, cv=cv)
+
+# For logit
+y_cv_pred_logit = cross_val_predict(best_logit, Xt, yt, cv=cv)
+
+# For DTC
+y_cv_pred_tree = cross_val_predict(best_tree, Xt, yt, cv=cv)
+
+# Creating a function to calculate tpr, precision, tnr for each model
+def cm_metrics(cm):
+  tn, fp, fn, tp = cm.ravel()
+  tpr = tp / (tp + fn)
+  precision = tp / (tp + fp)
+  tnr = tn / (tn + fp)
+  return tpr, precision, tnr
+
+for label, preds in [
+  ('kNN', y_cv_pred_knn),
+  ('Logit', y_cv_pred_logit),
+  ('Decision Tree', y_cv_pred_tree)
+]:
+  cm = confusion_matrix(yt, preds)
+  tpr, precision, tnr = cm_metrics(cm)
+  print(label)
+  print(cm)
+  print(f'TPR: {tpr}, Precision: {precision}, TNR: {tnr}')
+```
+
+*kNN*
+TPR:
+TPR = 0.77: The logit model correctly flagged 77.77% of the patients who were truly at risk
+
+Precision:
+Precision = 0.7844: when kNN predicts 'at-risk', it's right about 78.44% of the time
+
+True Negative Rate:
+TNR = .7524: about 75.24% of the truly not-at-risk patients were correctly predicted as such
+
+*Logistic Regression*
+TPR:
+TPR = 0.8461: The logit model correctly flagged 84.6% of the patients who were truly at risk
+
+Precision:
+Precision = 0.8181: when logit predicts 'at-risk', it's right about 81.8% of the time
+
+True Negative Rate:
+TNR = 0.7821: about 78.21% of the truly not-at-risk patients were correctly predicted as such
+
+*Decision Tree*
+TPR:
+TPR = 0.7521: The decision tree model correctly flagged 75.21% of the patients who were truly at risk
+
+Precision:
+Precision = 0.7652: when decision predicts 'at-risk', it's right about 76.52% of the time
+
+True Negative Rate:
+TNR = 0.7326: about 73.26% of the truly not-at-risk patients were correctly predicted as such
+
+
+
+## Part Three: Discussion
+Suppose you have been hired by a hospital to create classification models for heart attack risk.
+
+The following questions give a possible scenario for why the hospital is interested in these models. For each one, discuss:
+
+Which metric(s) you would use for model selection and why.
+
+Which of your final models (Part One Q1-3) you would recommend to the hospital, and why.
+
+What score you should expect for your chosen metric(s) using your chosen model to predict future observations.
+
+Q1
+The hospital faces severe lawsuits if they deem a patient to be low risk, and that patient later experiences a heart attack.
+
+Q2
+The hospital is overfull, and wants to only use bed space for patients most in need of monitoring due to heart attack risk.
+
+Q3
+The hospital is studying root causes of heart attacks, and would like to understand which biological measures are associated with heart attack risk.
+
+Q4
+The hospital is training a new batch of doctors, and they would like to compare the diagnoses of these doctors to the predictions given by the algorithm to measure the ability of new doctors to diagnose patients.
+
+
+
+
+Part Four: Validation
+Before sharing the dataset with you, I set aside a random 10% of the observations to serve as a final validation set.
+
+ha_validation = pd.read_csv("https://www.dropbox.com/s/jkwqdiyx6o6oad0/heart_attack_validation.csv?dl=1")
+
+Use each of your final models in Part One Q1-3, predict the target variable in the validation dataset.
+
+For each, output a confusion matrix, and report the ROC AUC, the precision, and the recall.
+
+Compare these values to the cross-validated estimates you reported in Part One and Part Two. Did our measure of model success turn out to be approximately correct for the validation data?
+
+
+
+
+Part Five: Cohen’s Kappa
+Another common metric used in classification is Cohen’s Kappa.
+
+Use online resources to research this measurement. Calculate it for the models from Part One, Q1-3, and discuss reasons or scenarios that would make us prefer to use this metric as our measure of model success. Do your conclusions from above change if you judge your models using Cohen’s Kappa instead? Does this make sense?
