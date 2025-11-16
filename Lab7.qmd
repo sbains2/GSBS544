@@ -137,39 +137,27 @@ best_knn = knn_search.best_estimator_
 print('best params:', knn_search.best_params_)
 print('CV ROC AUC', round(knn_search.best_score_, 3))
 
-# Finding the test ROC AUC
-y_proba = best_knn.predict_proba(Xt)[:, 1]
-y_pred = best_knn.predict(Xt)
-print('Test ROC AUC', round(roc_auc_score(yt, y_proba), 3))
-
-# Designing the confusion matrix
-cm = pd.DataFrame(
-  confusion_matrix(yt, y_pred),
+# Evaluating on the held-out validation split to capture testing metrics
+y_val_proba = best_knn.predict_proba(Xv)[:, 1]
+y_val_pred = best_knn.predict(Xv)
+cm_val = pd.DataFrame(
+  confusion_matrix(yv, y_val_pred),
   index=['True 0', 'True 1'],
   columns=['Pred 0', 'Pred 1']
 )
-print(cm)
+print('Validation ROC AUC', roc_auc_score(yv, y_val_proba))
+print(cm_val)
+tn, fp, fn, tp = confusion_matrix(yv, y_val_pred).ravel()
+print(f'Validation TPR: {tp / (tp + fn)}')
+print(f'Validation Precision: {tp / (tp + fp)}')
+print(f'Validation TNR: {tn / (tn + fp)}')
+# The testing kNN metrics are: TPR ≈ 0.414, Precision ≈ 0.571, TNR ≈ 0.654 on this split.
 
 ```
 
 Q2:
 
 ```{python}
-
-# Defining target and explanatory variables
-X = ha.drop(columns='output')
-y = ha['output']
-
-# Defining numerical and categorical features
-numeric = ['age', 'trtbps', 'chol', 'thalach']
-categorical = ['sex', 'cp', 'restecg']
-
-ct = ColumnTransformer(
-  [
-    ('numeric', StandardScaler(), numeric),
-    ('categorical', OneHotEncoder(handle_unknown='ignore'), categorical),
-  ]
-)
 
 # Developing logit pipeline
 logit_pipe = Pipeline([
@@ -196,39 +184,27 @@ best_logit = logit_search.best_estimator_
 print('best params:', logit_search.best_params_)
 print('CV ROC AUC', round(logit_search.best_score_, 3))
 
-# Finding the test ROC AUC
-y_proba = best_logit.predict_proba(Xt)[:, 1]
-y_pred = best_logit.predict(Xt)
-print('Test ROC AUC', round(roc_auc_score(yt, y_proba), 3))
-
-# Designing the confusion matrix
-cm = pd.DataFrame(
-  confusion_matrix(yt, y_pred),
+# Evaluating on the held-out validation split to capture testing metrics
+y_val_proba = best_logit.predict_proba(Xv)[:, 1]
+y_val_pred = best_logit.predict(Xv)
+cm_val = pd.DataFrame(
+  confusion_matrix(yv, y_val_pred),
   index=['True 0', 'True 1'],
   columns=['Pred 0', 'Pred 1']
 )
-print(cm)
+print('Validation ROC AUC', roc_auc_score(yv, y_val_proba))
+print(cm_val)
+tn, fp, fn, tp = confusion_matrix(yv, y_val_pred).ravel()
+print(f'Validation TPR: {tp / (tp + fn)}')
+print(f'Validation Precision: {tp / (tp + fp)}')
+print(f'Validation TNR: {tn / (tn + fp)}')
+# The testing metrics for logistic regression is TPR ≈ 0.586, Precision ≈ 0.680, TNR ≈ 0.692.
 
 ```
 
 Q3:
 
 ```{python}
-
-# Defining target and explanatory variables
-X = ha.drop(columns='output')
-y = ha['output']
-
-# Defining numerical and categorical features
-numeric = ['age', 'trtbps', 'chol', 'thalach']
-categorical = ['sex', 'cp', 'restecg']
-
-ct = ColumnTransformer(
-  [
-    ('numeric', StandardScaler(), numeric),
-    ('categorical', OneHotEncoder(handle_unknown='ignore'), categorical),
-  ]
-)
 
 # Developing dt pipeline
 tree_pipe = Pipeline([
@@ -256,18 +232,22 @@ best_tree = tree_search.best_estimator_
 print('best params:', tree_search.best_params_)
 print('CV ROC AUC', round(tree_search.best_score_, 3))
 
-# Finding the test ROC AUC
-y_proba = best_tree.predict_proba(Xt)[:, 1]
-y_pred = best_tree.predict(Xt)
-print('Test ROC AUC', round(roc_auc_score(yt, y_proba), 3))
-
-# Designing the confusion matrix
-cm = pd.DataFrame(
-  confusion_matrix(yt, y_pred),
+# Evaluating on the held-out validation split to capture testing metrics
+y_val_proba = best_tree.predict_proba(Xv)[:, 1]
+y_val_pred = best_tree.predict(Xv)
+cm_val = pd.DataFrame(
+  confusion_matrix(yv, y_val_pred),
   index=['True 0', 'True 1'],
   columns=['Pred 0', 'Pred 1']
 )
-print(cm)
+print('Validation ROC AUC', round(roc_auc_score(yv, y_val_proba), 3))
+print(cm_val)
+tn, fp, fn, tp = confusion_matrix(yv, y_val_pred).ravel()
+print(f'Validation TPR: {tp / (tp + fn)}')
+print(f'Validation Precision: {tp / (tp + fp)}')
+print(f'Validation TNR: {tn / (tn + fp)}')
+
+# The testing metrics for the decision tree is TPR ≈ 0.690, Precision ≈ 0.714, TNR ≈ 0.692 on validation.
 
 ```
 
@@ -387,7 +367,7 @@ for label, preds in [
 
 *kNN*
 TPR:
-TPR = 0.77: The logit model correctly flagged 77.77% of the patients who were truly at risk
+TPR = 0.77: The kNN model correctly flagged 77.77% of the patients who were truly at risk
 
 Precision:
 Precision = 0.7844: when kNN predicts 'at-risk', it's right about 78.44% of the time
@@ -419,6 +399,41 @@ TNR = 0.7326: about 73.26% of the truly not-at-risk patients were correctly pred
 
 ## Part Three: Discussion
 
+Part Three: Discussion
+Suppose you have been hired by a hospital to create classification models for heart attack risk.
+
+The following questions give a possible scenario for why the hospital is interested in these models. For each one, discuss:
+
+Which metric(s) you would use for model selection and why.
+
+Which of your final models (Part One Q1-3) you would recommend to the hospital, and why.
+
+What score you should expect for your chosen metric(s) using your chosen model to predict future observations.
+
+Q1
+The hospital faces severe lawsuits if they deem a patient to be low risk, and that patient later experiences a heart attack.
+
+Q2
+The hospital is overfull, and wants to only use bed space for patients most in need of monitoring due to heart attack risk.
+
+Q3
+The hospital is studying root causes of heart attacks, and would like to understand which biological measures are associated with heart attack risk.
+
+Q4
+The hospital is training a new batch of doctors, and they would like to compare the diagnoses of these doctors to the predictions given by the algorithm to measure the ability of new doctors to diagnose patients.
+
+
+### Q1
+When the cost of missing a high-risk patient is critical, I would optimize for recall/TPR so that we minimize false negatives. Among the fitted models I made, the logistic regression produced the highest cross-validiated TPR(~0.85 - part 2), so that is the model I would deploy. Based on cross validation I would tell the hospitals to expect recall in the mid-0.80s when future patients resemble the training set. But, the separate validation fold showed recall closer to 0.59, so I would communicate an expected range of about 0.6-0.8 and to keep monitoring this metric in production.
+
+### Q2
+Here, the hospital only wants to flag patients if it is highly confident that they truly need scarce beds, which would mean that precision should drive the model selection. Again, the logistic regression model led the other models with cross-validated precision around 0.82, so I would start there. In addition to this, it may be worthwhile to raise the classification threshold to trade the recall for fewer false positives. The validation data delivered precision of around 0.68, so I would set the expectation that the future precision would fall between the high 0.60s and low 0.80s.
+
+### Q3
+Studying root causes requires interpretable parameters in addition to good discrimination, so it would be worthwhile to evaluate the models based on ROC AUC and by how clearly the explain the feature effects. Logistic regression is the best model suited for this, as it's standardized coefficients can be translated into odds ratios, which would help the clinicians quantify how maximum heart rate and chest pain categories influence risk. With a CV ROC AUC near 0.89 (and 0.72 on the validation set), we can expect high -0.80s on the future data while still maintaining scientific interpretability.
+
+### Q4
+When we compare trainees to the algorithm we want equal weight on correctly identifying both risk classes, so I would use a balanced accuracy (average of TPR and TNR) as the selection metric. The decision tree is the best choice here. The if/then structure mirrors how humans reason, so trainees can contrast their thought process with the tree's splits. From Part 2, the tree achieved a CV TPR of 0.75, and TNR of 0.73, so I would tell the hospital to expect a balanced accuracy of roughly (0.75 + 0.73) / 2 = 0.74 on the future cohorts when comparing trainee diagnoses to the model's predictions.
 
 
 Part Four: Validation
