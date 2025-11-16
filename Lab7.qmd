@@ -418,49 +418,7 @@ TNR = 0.7326: about 73.26% of the truly not-at-risk patients were correctly pred
 
 
 ## Part Three: Discussion
-Suppose you have been hired by a hospital to create classification models for heart attack risk.
 
-The following questions give a possible scenario for why the hospital is interested in these models. For each one, discuss:
-
-Which metric(s) you would use for model selection and why.
-
-Which of your final models (Part One Q1-3) you would recommend to the hospital, and why.
-
-What score you should expect for your chosen metric(s) using your chosen model to predict future observations.
-
-Q1
-The hospital faces severe lawsuits if they deem a patient to be low risk, and that patient later experiences a heart attack.
-
-
-
-Q2
-The hospital is overfull, and wants to only use bed space for patients most in need of monitoring due to heart attack risk.
-
-
-
-
-Q3
-The hospital is studying root causes of heart attacks, and would like to understand which biological measures are associated with heart attack risk.
-
-
-
-
-Q4
-The hospital is training a new batch of doctors, and they would like to compare the diagnoses of these doctors to the predictions given by the algorithm to measure the ability of new doctors to diagnose patients.
-
-
-
-### Q1
-When the cost of missing a high-risk patient is catastrophic, I would optimize for **recall / TPR** so we minimize false negatives. Among my fitted models the logistic regression produced the highest cross-validated TPR (≈0.85 from Part Two), so that is the model I would deploy despite its lower specificity. Based on cross-validation I would tell the hospital to expect recall in the mid‑0.80s when future patients resemble the training set; however, the separate validation fold showed recall closer to 0.59, so I would communicate an expected range of roughly 0.60–0.80 and keep monitoring this metric in production.
-
-### Q2
-Here the hospital only wants to flag patients if it is highly confident they truly need scarce beds, so **precision (PPV)** should drive model selection. The logistic regression again led the other models with cross-validated precision around 0.82, so I would start there and consider raising the classification threshold to trade recall for fewer false positives. The validation set delivered precision of about 0.68, so I would set expectations that future precision will likely fall in the high-0.60s to low-0.80s unless we recalibrate the model.
-
-### Q3
-Studying root causes requires interpretable parameters in addition to good discrimination, so I would evaluate models by **ROC AUC** and by how clearly they explain feature effects. Logistic regression is best suited for this: its standardized coefficients can be translated into odds ratios, helping clinicians quantify how variables like `thalach` and chest-pain categories influence risk. With a cross-validated ROC AUC near 0.89 (and ≈0.72 on the validation set) we can expect high‑0.80s discrimination on future data while still retaining scientific interpretability.
-
-### Q4
-To compare trainees against the algorithm we need a balanced notion of agreement (false positives and negatives both matter), so I would evaluate with **balanced accuracy or Cohen’s κ**. A shallow decision tree is most appropriate here because its rules mirror the way doctors reason and thus provide transparent feedback. The tree’s cross-validated TPR (≈0.75) and TNR (≈0.73) average to a balanced accuracy around 0.74, so I would anticipate κ / balanced accuracy in the low‑to‑mid 0.70s when the algorithm is used as a teaching benchmark.
 
 
 Part Four: Validation
