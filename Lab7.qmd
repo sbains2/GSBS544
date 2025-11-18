@@ -101,6 +101,7 @@ y = ha['output']
 numeric = ['age', 'trtbps', 'chol', 'thalach']
 categorical = ['sex', 'cp', 'restecg']
 
+# Building the preprocessing transformer: scales the numerics, one-hot encodes the categoricals
 ct = ColumnTransformer(
   [
     ('numeric', StandardScaler(), numeric),
@@ -108,7 +109,7 @@ ct = ColumnTransformer(
   ]
 )
 
-# Splitting the data into train and testing
+# Splitting the data into train and testing - holding out 20% for validation so that all the models get the same split
 Xt, Xv, yt, yv = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Developing knn pipeline
@@ -251,7 +252,34 @@ print(f'Validation TNR: {tn / (tn + fp)}')
 
 ```
 
-Q4: Decision Tree Classifier Most important predictors
+Q4: 
+
+Logistic Regression Most important predictors
+
+```{python}
+# Building the list of feature names from the numeric columns AND the one-hot-encoded categories
+features = numeric + list(
+  best_logit.named_steps['prep'].named_transformers_['categorical'].get_feature_names_out(categorical)
+)
+
+# Combining the feature names with the absolute coefficient values and ranking them by magnitude
+importance = (
+  pd.DataFrame({
+    'feature': features,
+    # Use absolute value of coefficients as a proxy for impact
+    'importance': np.abs(best_logit.named_steps['logit'].coef_[0])
+  })
+  .sort_values('importance', ascending=False)
+)
+
+print(importance.head(5))
+
+```
+
+Interpretation:
+We're able to see that the logistic regression relied most on 'thalach' (maximum heart rate) and the chest pain indicator 'cp_0', with sex_0 also appearing. Other vitals, such as sex_1, thalach, and cp_1 were close follow ups in terms of importance in the logit model.
+
+Decision Tree Classifier Most important predictors
 
 ```{python}
 features = numeric + list(
@@ -274,7 +302,7 @@ Interpretation:
 We're able to see that the decision tree relied most on 'thalach' (maximum heart rate) and the chest pain indicator 'cp_0', with the male indicator also appearing. Other vitals, such as resting blood pressure, cholesterol, and the remaining chest-pain categories rarely appeared in the tree, so they didn't have much importance in this model.
 
 
-Q5
+Q5:
 
 ```{python}
 # Storing ROCs
@@ -447,10 +475,99 @@ For each, output a confusion matrix, and report the ROC AUC, the precision, and 
 
 Compare these values to the cross-validated estimates you reported in Part One and Part Two. Did our measure of model success turn out to be approximately correct for the validation data?
 
+```{python}
+# Importing new data
+ha2 = pd.read_csv('ha2.csv')
+ha2.info()
+```
 
+```{python}
+# Defining X's and y
+X_new = ha2.drop('output',axis=1)
+y_new = ha2['output']
+```
+
+```{python}
+from sklearn.metrics import precision_score, recall_score
+# For each model, outputting a confusion matrix, reporting ROC AUC, precision, and recall
+summary_validation = []
+
+final_models = [
+  ('kNN', best_knn, knn_search.best_score_),
+  ('Logit', best_logit, logit_search.best_score_),
+  ('Decision Tree', best_tree, tree_search.best_score_)
+
+]
+
+for name, model, cv_auc in final_models:
+  print(f'{name}')
+  # Predicted labels and class-1 probabilities on the validation data
+  y_pred = model.predict(X_new)
+  y_proba = model.predict_proba(X_new)[:, 1] # passing in class 1
+  # Confusion matrix for quick error inspection
+  cm = confusion_matrix(y_new, y_pred)
+  print(pd.DataFrame(
+    cm,
+    index=['True 0', 'True 1'],
+    columns=['Pred 0', 'Pred 1']
+  ))
+  # Finding out the validation metrics
+  roc = roc_auc_score(y_new, y_proba)
+  precision = precision_score(y_new, y_pred)
+  recall = recall_score(y_new, y_pred)
+  print(f'Validation ROC AUC: {roc}')
+  print(f'Validation Precision: {precision}')
+  print(f"Validation Recall: {recall}")
+
+  # Comparing values to the cross validated estimates of ROC AUC reported in parts 1 and part 2
+  summary_validation.append({
+    'Model': name,
+    'CV ROC AUC (p1)': round(cv_auc, 3),
+    'Validation ROC AUC': round(roc, 3),
+    'Validation Precision': round(precision, 3),
+    'Validation Recall': round(recall, 3)
+  })
+
+# Tabular summary to compare models
+pd.DataFrame(summary_validation)
+
+```
+
+### kNN
+The kNN model performed noticeably worse on the validation data compared to it's cross-validated performance. While the CV ROC AUC was 0.856, the validation ROC AUC dropped down to 0.782, which indicates a weaker discrimination ability on newer patients. Precision remained relatively high at ~0.83, but recall decreased to ~0.53, which means that the model missed nearly half of truly high-risk patients in the validation set. Because the recall was much lower than the CV, (~0.78), the kNN model appears to have been overfitted and doesn't generalize well to new data.
+
+### Logistic Regression
+Overall, the logit model generalizes more consistently. It's validation ROC AUC of 0.856 was very close to the CV estimate of 0.893, which shows that the model held it's discriminatory power over new data. The precision (0.81) and recall (0.684) were decently lower than their cross-validated values, but still relatively strong. Overall, the logistic regression model performed similarly on both the CV and validation data, which highlights it's stability and reliability for predicting heart attack risk.
+
+### Decision Tree
+The decision tree performed better on validation data, where it's validation ROC AUC (0.883) exceeded it's CV ROC AUC (0.814). It achieved very high precision (0.929) with approximately the same recall as logistic regression (0.68). The tree produced only one false positive and correctly identified most high-risk patients. This suggests that the tuned tree did not overfit and actually generalized slightly better than the cross-validated indicated.
+
+### Overall Comparison
+Across all the models, the validation results were broadly consistent with the cross -validated trends, though the magnitude differed. Logistic regression showed the most stable performance, and the decision tree unexpectedly improved on the validation set. The kNN model performed noticeably worse than its CV estimates. The highlights the CV metrics were reasonable but slightly optimistic for kNN and slightly pessimistic for the decision tree.
 
 
 Part Five: Cohen’s Kappa
 Another common metric used in classification is Cohen’s Kappa.
 
 Use online resources to research this measurement. Calculate it for the models from Part One, Q1-3, and discuss reasons or scenarios that would make us prefer to use this metric as our measure of model success. Do your conclusions from above change if you judge your models using Cohen’s Kappa instead? Does this make sense?
+
+
+```{python}
+from sklearn.metrics import cohen_kappa_score
+
+# Comparing the cross-validated predictions to true labels with Cohen's Kappa
+kappas = []
+
+for name, preds in [
+  ('kNN', y_cv_pred_knn),
+  ('Logit', y_cv_pred_logit),
+  ('Decision Tree', y_cv_pred_tree)
+]:
+  kappa = cohen_kappa_score(yt, preds)
+  kappas.append({'Model': name, 'Cohen Kappa': round(kappa, 3)})
+  print(f'{name} Kappa: {kappa}')
+
+```
+
+Discussion:
+- Why we're using Kappa: Cohen's kappa score adjusts for agreement expects by chance, essentially making it easier when there are class imbalances or when we want a single score or when we want a single score that penalizes both error types while accounting for the baseline prevalence of heart attacks. This is the type of situation in P3 Q4 where the hospital compares the model's diagnoses with the trainees. With interpreting our results, we find that when K=0.4-0.6, it indicates moderate agreement, where k>0.6 is substantial. In the kNN (K=0.53) and the decision tree (k=0.48), they sit in the moderate band, which means that they beat chance but still disagree with the true diagnoses relatively often. However, Logistic regression hits k=0.63, which passes into substantial agreement and indicates that it stays aligned with the actual labels more consistently. This doesn't change our conclusions, as logit > kNN > tree mirrors what we saw with our ROC AUC, precision, and recall, so logistic regression remains the recommended model. This makes sense, as chance-adjusted agreement validates that logit generalizes best, while kNN and the decision tree continue to lag, especially on the validation fold.
