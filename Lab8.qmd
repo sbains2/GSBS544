@@ -1,0 +1,217 @@
+---
+title: GSBS544 Lab 8
+author: Sahil Bains
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+echo: true
+---
+Github Link: https://github.com/sbains2/GSBS544
+
+Instructions
+You will submit an HTML document to Canvas as your final version.
+
+Your document should show your code chunks/cells as well as any output. Make sure that only relevant output is printed. Do not, for example, print the entire dataset in your final rendered file.
+
+Your document should also be clearly organized, so that it is easy for a reader to find your answers to each question.
+
+The Data
+This week, we consider a dataset generated from text data.
+
+The original dataset can be found here: https://www.kaggle.com/datasets/kingburrito666/cannabis-strains. It consists of user reviews of different strains of cannabis. Users rated their experience with the cannabis strain on a scale of 1 to 5. They also selected words from a long list to describe the Effects and the Flavor of the cannabis.
+
+In the dataset linked above, each row is one strain of cannabis. The average rating of all testers is reported, as well as the most commonly used words for the effect and flavor.
+
+Some data cleaning has been performed for you: The Effect and Flavor columns have been converted to dummy variables indicating if the particular word was used for the particular strain.
+
+This cleaned data can be found at: https://www.dropbox.com/s/s2a1uoiegitupjc/cannabis_full.csv
+
+Our goal will be to fit models that identify the Sativa types from the Indica types, and then to fit models that also distinguish the Hybrid types.
+
+IMPORTANT: In this assignment, you do not need to consider different feature sets. Normally, this would be a good thing to try - but for this homework, simply include all the predictors for every model.
+
+```{python}
+# Importing all necessary libraries
+import pandas as pd
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LogisticRegression
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+from plotnine import *
+
+```
+
+
+```{python}
+# Reading in the data
+df = pd.read_csv('weed.csv')
+# Dropping NaNs
+weed = df.dropna()
+weed.info()
+weed.describe()
+
+```
+
+Part One: Binary Classification
+Create a dataset that is limited only to the Sativa and Indica type cannabis strains.
+
+This section asks you to create a final best model for each of the four new model types studied this week: LDA, QDA, SVC, and SVM. For SVM, you may limit yourself to only the polynomial kernel.
+
+For each, you should:
+
+Choose a metric you will use to select your model, and briefly justify your choice. (Hint: There is no specific target category here, so this should not be a metric that only prioritizes one category.)
+
+Find the best model for predicting the Type variable. Don’t forget to tune any hyperparameters.
+
+Report the (cross-validated!) metric.
+
+Fit the final model.
+
+Output a confusion matrix.
+
+Q1: LDA
+Q2: QDA
+Q3: SVC
+Q4: SVM
+
+Creating a dataset with targets Indica and Sativa
+
+```{python}
+# Subsetting the dataset with limiting targets to Indica and Sativa
+weed = weed[(weed['Type'] == 'indica') | (weed['Type'] == 'sativa')]
+
+# Checking that there are only two types in the Type column
+weed['Type'].nunique()
+```
+
+Basic model setup
+```{python}
+# Creating target and explanatory variables
+X = weed.drop(columns=['Type'])
+y = weed['Type']
+
+# Getting numeric and categorical variables
+num = X.select_dtypes(include=['number']).columns
+cat = X.select_dtypes(exclude=['number']).columns
+
+# Defining columnTransformer for preprocessing steps
+ct = ColumnTransformer(
+    transformers=[
+    ('num', StandardScaler(), num),
+    ('cat', OneHotEncoder(handle_unknown='ignore', sparse_output=False), cat)
+])
+
+# Doing a test-train split to partition training and testing data
+Xt, Xv, yt, yv = train_test_split(X, y, test_size=0.2, random_state=42)
+
+```
+
+For LDA
+```{python}
+import math
+# Creating a pipeline for Linear Discriminatory Analysis
+LDApipe = Pipeline([
+    ('preprocess', ct),
+    # adding param solver='lsqr' to mitigate issue when predictors exceeds the number of samples per class,
+    # using least squares formulation instead of SVD inversion so that the model tolerates high-dimensional
+    # highly correlated feature sets.
+    ('model', LinearDiscriminantAnalysis(solver='lsqr'))
+])
+
+# Fitting the pipe on the training data
+LDApipe.fit(Xt, yt)
+
+# Finding cross-validated accuracy
+print(np.mean(cross_val_score(LDApipe, X, y, cv=5)))
+
+# Generating predictions on the validation set
+y_pred = LDApipe.predict(Xv)
+
+# specifying class order for rows/columns
+labels = ['indica', 'sativa']
+
+# Designing a confusion matrix
+cm = confusion_matrix(yv, y_pred, labels=labels)
+cm_df = pd.DataFrame(cm, index=[f"Actual {lbl}" for lbl in labels], # appending row labels
+                    columns=[f"Predicted {lbl}" for lbl in labels]) # appending column labels
+print(cm_df)
+
+```
+For the LDA model, we find that the mean cross validated metric is 0.54
+
+
+For QDA
+```{python}
+
+```
+
+For SVC
+```{python}
+
+```
+
+For SVM
+```{python}
+
+```
+
+
+
+
+
+Part Two: Natural Multiclass
+Now use the full dataset, including the Hybrid strains.
+
+Q1
+Fit a decision tree, plot the final fit, and interpret the results.
+
+Q2
+Repeat the analyses from Part One for LDA, QDA, and KNN.
+
+Q3
+Were your metrics better or worse than in Part One? Why? Which categories were most likely to get mixed up, according to the confusion matrices? Why?
+
+
+
+
+
+Part Three: Multiclass from Binary
+Consider two models designed for binary classification: SVC and Logistic Regression.
+
+Q1
+Fit and report metrics for OvR versions of the models. That is, for each of the two model types, create three models:
+
+Indica vs. Not Indica
+
+Sativa vs. Not Sativa
+
+Hybrid vs. Not Hybrid
+
+Q2
+Which of the six models did the best job distinguishing the target category from the rest? Which did the worst? Does this make intuitive sense?
+
+Q3
+Fit and report metrics for OvO versions of the models. That is, for each of the two model types, create three models:
+
+Indica vs. Sativa
+
+Indica vs. Hybrid
+
+Hybrid vs. Sativa
+
+Q4
+Which of the six models did the best job distinguishing at differentiating the two groups? Which did the worst? Does this make intuitive sense?
+
+Q5
+Suppose you had simply input the full data, with three classes, into the LogisticRegression function. Would this have automatically taken an “OvO” approach or an “OvR” approach?
+
+What about for SVC?
+
+Note: You do not actually have to run code here - you only need to look at sklearn’s documentation to see how these functions handle multiclass input.
