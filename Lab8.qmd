@@ -658,15 +658,304 @@ Fit and report metrics for OvO versions of the models. That is, for each of the 
 
 Indica vs. Sativa
 
+```{python}
+# For Logistic Regression
+ovo = df.dropna()
+ovo = ovo.copy()
+ovo = ovo[ovo['Type'].isin(['indica', 'sativa'])]
+
+ovo['indica_v_sativa'] = ovo['Type'] == 'indica'
+
+X = ovo.drop(columns=['Type', 'indica_v_sativa'])
+y = ovo['indica_v_sativa']
+
+Xt, Xv, yt, yv = train_test_split(X,y, test_size=0.2, random_state=42, stratify=y)
+
+# Creating the Logistic Regression Pipeline
+
+# Getting numeric and categorical variables
+num = X.select_dtypes(include=['number']).columns
+cat = X.select_dtypes(exclude=['number']).columns
+
+ct = ColumnTransformer([
+      ('num', StandardScaler(), num),
+      ('cat', OneHotEncoder(handle_unknown='ignore', sparse_output=False), cat)
+])
+
+logit = Pipeline([
+    ('preprocess', ct),
+    ('model', LogisticRegression())
+])
+
+# Fitting the OvO model on the training dataset
+logit.fit(Xt, yt)
+
+# Finding cross-validated accuracy
+print(np.mean(cross_val_score(logit, X, y, cv=5, scoring='accuracy')))
+
+# Generating predictions on the validation set
+y_pred = logit.predict(Xv)
+
+# specifying class order for rows/columns
+labels = [False, True]
+
+# Designing a confusion matrix
+cm = confusion_matrix(yv, y_pred, labels=labels)
+cm_df = pd.DataFrame(cm, index=[f"Actual {lbl}" for lbl in labels], # appending row labels
+                    columns=[f"Predicted {lbl}" for lbl in labels]) # appending column labels
+print(cm_df)
+
+
+```
+Cross validated accuracy score: 0.8539423456627617
+
+
+```{python}
+# For Logistic Regression
+ovo = df.dropna()
+ovo = ovo.copy()
+ovo = ovo[ovo['Type'].isin(['indica', 'sativa'])]
+
+ovo['indica_v_sativa'] = ovo['Type'] == 'indica'
+
+X = ovo.drop(columns=['Type', 'indica_v_sativa'])
+y = ovo['indica_v_sativa']
+
+Xt, Xv, yt, yv = train_test_split(X,y, test_size=0.2, random_state=42, stratify=y)
+
+# Creating the SVM Pipeline
+
+svm = Pipeline([
+    ('preprocess', ct),
+    ('model', SVC())
+])
+
+# Fitting the OvO model on the training dataset
+svm.fit(Xt, yt)
+
+# Finding cross-validated accuracy
+print(np.mean(cross_val_score(svm, X, y, cv=5, scoring='accuracy')))
+
+# Generating predictions on the validation set
+y_pred = svm.predict(Xv)
+
+# specifying class order for rows/columns
+labels = [False, True]
+
+# Designing a confusion matrix
+cm = confusion_matrix(yv, y_pred, labels=labels)
+cm_df = pd.DataFrame(cm, index=[f"Actual {lbl}" for lbl in labels], # appending row labels
+                    columns=[f"Predicted {lbl}" for lbl in labels]) # appending column labels
+print(cm_df)
+
+
+
+```
+Cross validation accuracy score: 0.8408757843008206
+
 Indica vs. Hybrid
 
+```{python}
+# For Logistic Regression
+ovo = df.dropna()
+ovo = ovo.copy()
+ovo = ovo[ovo['Type'].isin(['indica', 'hybrid'])]
+
+ovo['indica_v_hybrid'] = ovo['Type'] == 'indica'
+
+X = ovo.drop(columns=['Type', 'indica_v_hybrid'])
+y = ovo['indica_v_hybrid']
+
+Xt, Xv, yt, yv = train_test_split(X,y, test_size=0.2, random_state=42, stratify=y)
+
+# Creating the Logistic Regression Pipeline
+
+# Getting numeric and categorical variables
+num = X.select_dtypes(include=['number']).columns
+cat = X.select_dtypes(exclude=['number']).columns
+
+ct = ColumnTransformer([
+      ('num', StandardScaler(), num),
+      ('cat', OneHotEncoder(handle_unknown='ignore', sparse_output=False), cat)
+])
+
+logit = Pipeline([
+    ('preprocess', ct),
+    ('model', LogisticRegression())
+])
+
+# Fitting the OvO model on the training dataset
+logit.fit(Xt, yt)
+
+# Finding cross-validated accuracy
+print(np.mean(cross_val_score(logit, X, y, cv=5, scoring='accuracy')))
+
+# Generating predictions on the validation set
+y_pred = logit.predict(Xv)
+
+# specifying class order for rows/columns
+labels = [False, True]
+
+# Designing a confusion matrix
+cm = confusion_matrix(yv, y_pred, labels=labels)
+cm_df = pd.DataFrame(cm, index=[f"Actual {lbl}" for lbl in labels], # appending row labels
+                    columns=[f"Predicted {lbl}" for lbl in labels]) # appending column labels
+print(cm_df)
+
+
+```
+Cross validated accuracy score: 0.7401882101155068
+
+
+```{python}
+
+ovo = df.dropna()
+ovo = ovo.copy()
+ovo = ovo[ovo['Type'].isin(['indica', 'hybrid'])]
+
+ovo['indica_v_hybrid'] = ovo['Type'] == 'indica'
+
+X = ovo.drop(columns=['Type', 'indica_v_hybrid'])
+y = ovo['indica_v_hybrid']
+
+Xt, Xv, yt, yv = train_test_split(X,y, test_size=0.2, random_state=42, stratify=y)
+
+# Creating the SVM Pipeline
+
+svm = Pipeline([
+    ('preprocess', ct),
+    ('model', SVC())
+])
+
+# Fitting the OvO model on the training dataset
+svm.fit(Xt, yt)
+
+# Finding cross-validated accuracy
+print(np.mean(cross_val_score(svm, X, y, cv=5, scoring='accuracy')))
+
+# Generating predictions on the validation set
+y_pred = svm.predict(Xv)
+
+# specifying class order for rows/columns
+labels = [False, True]
+
+# Designing a confusion matrix
+cm = confusion_matrix(yv, y_pred, labels=labels)
+cm_df = pd.DataFrame(cm, index=[f"Actual {lbl}" for lbl in labels], # appending row labels
+                    columns=[f"Predicted {lbl}" for lbl in labels]) # appending column labels
+print(cm_df)
+
+
+
+```
+Cross validation accuracy score: 0.7317801277814496
+
 Hybrid vs. Sativa
+
+```{python}
+# For Logistic Regression
+ovo = df.dropna()
+ovo = ovo.copy()
+ovo = ovo[ovo['Type'].isin(['hybrid', 'sativa'])]
+
+ovo['hybrid_v_sativa'] = ovo['Type'] == 'hybrid'
+
+X = ovo.drop(columns=['Type', 'hybrid_v_sativa'])
+y = ovo['hybrid_v_sativa']
+
+Xt, Xv, yt, yv = train_test_split(X,y, test_size=0.2, random_state=42, stratify=y)
+
+# Creating the Logistic Regression Pipeline
+
+# Getting numeric and categorical variables
+num = X.select_dtypes(include=['number']).columns
+cat = X.select_dtypes(exclude=['number']).columns
+
+ct = ColumnTransformer([
+      ('num', StandardScaler(), num),
+      ('cat', OneHotEncoder(handle_unknown='ignore', sparse_output=False), cat)
+])
+
+logit = Pipeline([
+    ('preprocess', ct),
+    ('model', LogisticRegression())
+])
+
+# Fitting the OvO model on the training dataset
+logit.fit(Xt, yt)
+
+# Finding cross-validated accuracy
+print(np.mean(cross_val_score(logit, X, y, cv=5, scoring='accuracy')))
+
+# Generating predictions on the validation set
+y_pred = logit.predict(Xv)
+
+# specifying class order for rows/columns
+labels = [False, True]
+
+# Designing a confusion matrix
+cm = confusion_matrix(yv, y_pred, labels=labels)
+cm_df = pd.DataFrame(cm, index=[f"Actual {lbl}" for lbl in labels], # appending row labels
+                    columns=[f"Predicted {lbl}" for lbl in labels]) # appending column labels
+print(cm_df)
+
+
+```
+Cross validated accuracy score: 0.7506482723382513
+
+
+```{python}
+ovo = df.dropna()
+ovo = ovo.copy()
+ovo = ovo[ovo['Type'].isin(['hybrid', 'sativa'])]
+
+ovo['hybrid_v_sativa'] = ovo['Type'] == 'hybrid'
+
+X = ovo.drop(columns=['Type', 'hybrid_v_sativa'])
+y = ovo['hybrid_v_sativa']
+
+Xt, Xv, yt, yv = train_test_split(X,y, test_size=0.2, random_state=42, stratify=y)
+
+# Creating the SVM Pipeline
+
+svm = Pipeline([
+    ('preprocess', ct),
+    ('model', SVC())
+])
+
+# Fitting the OvO model on the training dataset
+svm.fit(Xt, yt)
+
+# Finding cross-validated accuracy
+print(np.mean(cross_val_score(svm, X, y, cv=5, scoring='accuracy')))
+
+# Generating predictions on the validation set
+y_pred = svm.predict(Xv)
+
+# specifying class order for rows/columns
+labels = [False, True]
+
+# Designing a confusion matrix
+cm = confusion_matrix(yv, y_pred, labels=labels)
+cm_df = pd.DataFrame(cm, index=[f"Actual {lbl}" for lbl in labels], # appending row labels
+                    columns=[f"Predicted {lbl}" for lbl in labels]) # appending column labels
+print(cm_df)
+
+
+
+```
+Cross validation accuracy score: 0.7336739690447297
 
 Q4
 Which of the six models did the best job distinguishing at differentiating the two groups? Which did the worst? Does this make intuitive sense?
 
+The sativa v. indica logistic regression model performed the best in terms of cross validated score, with an accuracy of ~0.85. The model that performed the worst was the indica v. hybrid SVM model, with a cross validated accuracy score of ~0.73. Intuitively, this makes sense, as sativa versus indica strains separate more cleanly, but hybrids overlap the types, making a harder boundary for the SVM model.
+
+
 Q5
 Suppose you had simply input the full data, with three classes, into the LogisticRegression function. Would this have automatically taken an “OvO” approach or an “OvR” approach?
+
+
 
 What about for SVC?
 
