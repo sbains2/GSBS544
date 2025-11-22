@@ -36,15 +36,17 @@ IMPORTANT: In this assignment, you do not need to consider different feature set
 import pandas as pd
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis
 from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier, plot_tree
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 from plotnine import *
+import matplotlib.pyplot as plt
 
 ```
 
@@ -149,21 +151,99 @@ For the LDA model, we find that the mean cross validated metric is 0.54
 
 For QDA
 ```{python}
+import math
+# Creating a pipeline for Quadratic Discriminatory Analysis
+QDApipe = Pipeline([
+    ('preprocess', ct),
+    ('model', QuadraticDiscriminantAnalysis())
+])
+
+# Fitting the pipe on the training data
+QDApipe.fit(Xt, yt)
+
+# Finding cross-validated accuracy
+print(np.mean(cross_val_score(QDApipe, X, y, cv=5)))
+
+# Generating predictions on the validation set
+y_pred = QDApipe.predict(Xv)
+
+# specifying class order for rows/columns
+labels = ['indica', 'sativa']
+
+# Designing a confusion matrix
+cm = confusion_matrix(yv, y_pred, labels=labels)
+cm_df = pd.DataFrame(cm, index=[f"Actual {lbl}" for lbl in labels], # appending row labels
+                    columns=[f"Predicted {lbl}" for lbl in labels]) # appending column labels
+print(cm_df)
 
 ```
+cross validated accuracy: 0.34362550836791794
+
 
 For SVC
 ```{python}
+# Creating a pipeline for Support Vector Classifier
+SVCpipe = Pipeline([
+    ('preprocess', ct),
+    ('model', SVC())
+])
 
+# Fitting the pipe on the training data
+SVCpipe.fit(Xt, yt)
+
+# Finding cross-validated accuracy
+print(np.mean(cross_val_score(SVCpipe, X, y, cv=5)))
+
+# Generating predictions on the validation set
+y_pred = SVCpipe.predict(Xv)
+
+# specifying class order for rows/columns
+labels = ['indica', 'sativa']
+
+# Designing a confusion matrix
+cm = confusion_matrix(yv, y_pred, labels=labels)
+cm_df = pd.DataFrame(cm, index=[f"Actual {lbl}" for lbl in labels], # appending row labels
+                    columns=[f"Predicted {lbl}" for lbl in labels]) # appending column labels
+print(cm_df)
 ```
 
 For SVM
 ```{python}
+# Creating a pipeline for SVM
+SVMpipe = Pipeline([
+    ('preprocess', ct),
+    ('model', SVC(kernel='poly'))
+])
 
+# Tuning key hyperparams for the polynomial kernel
+svm_params = {
+    'model__C': [0.1, 1, 10],
+    'model__degree': [2,3,4],
+    'model__gamma': ['scale', 'auto'],
+    'model__coef0': [0,1]
+}
+
+svm_grid = GridSearchCV(SVMpipe, svm_params, cv=5)
+svm_grid.fit(Xt, yt)
+
+# Cross validated accuracy for the best polynomial SVM
+print(svm_grid.best_score_)
+print(svm_grid.best_params_)
+
+# Generating predictions on the validation set using tuned model
+best_svm = svm_grid.best_estimator_
+y_pred = best_svm.predict(Xv)
+
+# specifying class order for rows/columns
+labels = ['indica', 'sativa']
+
+# Designing a confusion matrix
+cm = confusion_matrix(yv, y_pred, labels=labels)
+cm_df = pd.DataFrame(cm, index=[f"Actual {lbl}" for lbl in labels], # appending row labels
+                    columns=[f"Predicted {lbl}" for lbl in labels]) # appending column labels
+print(cm_df)
 ```
-
-
-
+For the SVM model, we find that the mean cross validated metric is 0.858
 
 
 Part Two: Natural Multiclass
@@ -172,15 +252,165 @@ Now use the full dataset, including the Hybrid strains.
 Q1
 Fit a decision tree, plot the final fit, and interpret the results.
 
+```{python}
+p2 = df.dropna()
+
+# Creating new target and explanatory variables
+X = p2.drop(columns=['Type'])
+y = p2['Type']
+
+Xt, Xv, yt, yv = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+
+# Creating a pipeline for DTC
+tree = Pipeline([
+    ('preprocess', ct),
+    ('model', DecisionTreeClassifier())
+])
+
+tree_grid = {
+    'model__max_depth': [3,5,7,9,11],
+    'model__min_samples_split': [2,3,4],
+    'model__criterion': ['gini', 'entropy']
+}
+
+grid_tree = GridSearchCV(tree, tree_grid, cv=5, scoring='accuracy')
+grid_tree.fit(Xt, yt)
+y_pred = grid_tree.predict(Xv)
+print('tree accuracy', accuracy_score(yv, y_pred))
+print('classification report', classification_report(yv, y_pred))
+
+# plot the tuned tree
+
+# getting tuned decision tree
+best_tree = grid_tree.best_estimator_
+
+# extracting importance scores
+imp = best_tree.named_steps['model'].feature_importances_
+
+# extracting feature names after preprocessing
+feat = best_tree.named_steps['preprocess'].get_feature_names_out()
+
+# Building a dataframe of top important feature for plotting
+formatted = (
+    pd.DataFrame({'feature': feat, 'importance': imp})
+                .sort_values('importance', ascending=False)
+                .head(10) # Limiting to 15 entries
+)
+
+# Plotting
+(
+    ggplot(formatted, aes(x='reorder(feature, importance)', y='importance'))
+    + geom_col()
+    + coord_flip()
+    + labs(
+        x='feature',
+        y='importance',
+        title='Decision Tree Feature Importances (top 10)'
+    )
+)
+```
+From interpreting the plot of the fitted Decision Tree Classifier, we're able to see that the top split drivers are 'sleepy', 'energetic', 'relaxed', 'citrus', 'uplifted', and 'rating', with 'sleepy' accountign for most of the impurity reduction (~0.78).
+
+
 Q2
 Repeat the analyses from Part One for LDA, QDA, and KNN.
+
+```{python}
+# For LDA
+# Creating a pipeline for Linear Discriminatory Analysis
+LDApipe = Pipeline([
+    ('preprocess', ct),
+    # adding param solver='lsqr' to mitigate issue when predictors exceeds the number of samples per class,
+    # using least squares formulation instead of SVD inversion so that the model tolerates high-dimensional
+    # highly correlated feature sets.
+    ('model', LinearDiscriminantAnalysis(solver='lsqr'))
+])
+
+# Fitting the pipe on the training data
+LDApipe.fit(Xt, yt)
+
+# Finding cross-validated accuracy
+print(np.mean(cross_val_score(LDApipe, X, y, cv=5, scoring='accuracy')))
+
+# Generating predictions on the validation set
+y_pred = LDApipe.predict(Xv)
+
+# specifying class order for rows/columns
+labels = ['indica', 'sativa', 'hybrid']
+
+# Designing a confusion matrix
+cm = confusion_matrix(yv, y_pred, labels=labels)
+cm_df = pd.DataFrame(cm, index=[f"Actual {lbl}" for lbl in labels], # appending row labels
+                    columns=[f"Predicted {lbl}" for lbl in labels]) # appending column labels
+print(cm_df)
+
+
+```
+cross validated accuracy: 0.3094756659489708
+
+```{python}
+# For QDA
+# Creating a pipeline for Quadratic Discriminatory Analysis
+QDApipe = Pipeline([
+    ('preprocess', ct),
+    ('model', QuadraticDiscriminantAnalysis())
+])
+
+# Fitting the pipe on the training data
+QDApipe.fit(Xt, yt)
+
+# Finding cross-validated accuracy
+print(np.mean(cross_val_score(QDApipe, X, y, cv=5)))
+
+# Generating predictions on the validation set
+y_pred = QDApipe.predict(Xv)
+
+# specifying class order for rows/columns
+labels = ['indica', 'sativa', 'hybrid']
+
+# Designing a confusion matrix
+cm = confusion_matrix(yv, y_pred, labels=labels)
+cm_df = pd.DataFrame(cm, index=[f"Actual {lbl}" for lbl in labels], # appending row labels
+                    columns=[f"Predicted {lbl}" for lbl in labels]) # appending column labels
+print(cm_df)
+```
+cross validated accuracy: 0.34362550836791794
+
+```{python}
+# For kNN
+knnpipe = Pipeline([
+    ('preprocess', ct),
+    ('model', KNeighborsClassifier())
+])
+
+knnpipe.fit(Xt,yt)
+
+knn_grid = {
+    'model__n_neighbors': [3,5,7,9],
+    'model__weights': ['uniform', 'distance']
+}
+
+gridknn = GridSearchCV(knnpipe, knn_grid, cv=5, scoring='accuracy')
+gridknn.fit(Xt, yt)
+y_pred = gridknn.predict(Xv)
+
+
+print('best score:', gridknn.best_score_)
+print('knn best params:', gridknn.best_params_)
+
+labels = ['indica', 'sativa', 'hybrid']
+
+cm = confusion_matrix(yv, y_pred, labels=labels)
+cm_df = pd.DataFrame(cm, index=[f"Actual {lbl}" for lbl in labels], # appending row labels
+                    columns=[f"Predicted {lbl}" for lbl in labels]) # appending column labels
+print(cm_df)
+```
+cross validated accuracy: 0.5690565730565731
 
 Q3
 Were your metrics better or worse than in Part One? Why? Which categories were most likely to get mixed up, according to the confusion matrices? Why?
 
-
-
-
+In part 2, all 3 models lost accuracy compared to Part 1 because Hybrid overlaps Indica/Sativa, which shrinks the margins. LDA held up the best, while QDA decreased significantly because full covariances get unstable with lots of correlated dummies. kNN landed in between, with Hybrid points often pulled toward nearby Indica and Sativa. Overall,most mistakes were hybrids being predicted as indica or sativa. Indica vs. Sativa stayed cleaner. Because hybrids overlap both groups, accuracy drops overall. With simpler boundaries in LDA, it was able to handle the overlap better than the more flexible models like kNN or QDA. 
 
 Part Three: Multiclass from Binary
 Consider two models designed for binary classification: SVC and Logistic Regression.
@@ -190,12 +420,238 @@ Fit and report metrics for OvR versions of the models. That is, for each of the 
 
 Indica vs. Not Indica
 
+```{python}
+# For SVC
+base = df.dropna()
+tmp = base.copy()
+tmp['indica'] = (tmp['Type'] == 'indica')
+
+X = tmp.drop(columns=['Type', 'indica'])
+y = tmp['indica']
+
+Xt, Xv, yt, yv = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+
+# Getting numeric and categorical variables
+num = X.select_dtypes(include=['number']).columns
+cat = X.select_dtypes(exclude=['number']).columns
+
+# Defining columnTransformer for preprocessing steps
+ct = ColumnTransformer(
+    transformers=[
+    ('num', StandardScaler(), num),
+    ('cat', OneHotEncoder(handle_unknown='ignore', sparse_output=False), cat)
+])
+
+SVCpipe = Pipeline([
+    ('preprocess', ct),
+    ('model', SVC())
+])
+
+# Fitting the pipe on the training data
+SVCpipe.fit(Xt, yt)
+
+# Finding cross-validated accuracy
+print(np.mean(cross_val_score(SVCpipe, X, y, cv=5, scoring='accuracy')))
+
+# Generating predictions on the validation set
+y_pred = SVCpipe.predict(Xv)
+
+# specifying class order for rows/columns
+labels = [False, True]
+
+# Designing a confusion matrix
+cm = confusion_matrix(yv, y_pred, labels=labels)
+cm_df = pd.DataFrame(cm, index=[f"Actual {lbl}" for lbl in labels], # appending row labels
+                    columns=[f"Predicted {lbl}" for lbl in labels]) # appending column labels
+print(cm_df)
+
+```
+cv score: 0.7781945267887791
+
+```{python}
+# For Logistic Regression
+logit = Pipeline([
+    ('preprocess', ct),
+    ('model', LogisticRegression())
+])
+
+# Fitting the pipe on the training data
+logit.fit(Xt, yt)
+
+# Finding cross-validated accuracy
+print(np.mean(cross_val_score(logit, X, y, cv=5, scoring='accuracy')))
+
+# Generating predictions on the validation set
+y_pred = logit.predict(Xv)
+
+# specifying class order for rows/columns
+labels = [False, True]
+
+# Designing a confusion matrix
+cm = confusion_matrix(yv, y_pred, labels=labels)
+cm_df = pd.DataFrame(cm, index=[f"Actual {lbl}" for lbl in labels], # appending row labels
+                    columns=[f"Predicted {lbl}" for lbl in labels]) # appending column labels
+print(cm_df)
+
+```
+cv score: 0.7864085041761579
+
 Sativa vs. Not Sativa
+```{python}
+# For SVC
+tmp = base.copy()
+tmp['sativa'] = (tmp['Type'] == 'sativa')
+
+X = tmp.drop(columns=['Type', 'sativa'])
+y = tmp['sativa']
+
+Xt, Xv, yt, yv = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+
+# Getting numeric and categorical variables
+num = X.select_dtypes(include=['number']).columns
+cat = X.select_dtypes(exclude=['number']).columns
+
+# Defining columnTransformer for preprocessing steps
+ct = ColumnTransformer(
+    transformers=[
+    ('num', StandardScaler(), num),
+    ('cat', OneHotEncoder(handle_unknown='ignore', sparse_output=False), cat)
+])
+
+SVCpipe = Pipeline([
+    ('preprocess', ct),
+    ('model', SVC())
+])
+
+# Fitting the pipe on the training data
+SVCpipe.fit(Xt, yt)
+
+# Finding cross-validated accuracy
+print(np.mean(cross_val_score(SVCpipe, X, y, cv=5, scoring='accuracy')))
+
+# Generating predictions on the validation set
+y_pred = SVCpipe.predict(Xv)
+
+# specifying class order for rows/columns
+labels = [False, True]
+
+# Designing a confusion matrix
+cm = confusion_matrix(yv, y_pred, labels=labels)
+cm_df = pd.DataFrame(cm, index=[f"Actual {lbl}" for lbl in labels], # appending row labels
+                    columns=[f"Predicted {lbl}" for lbl in labels]) # appending column labels
+print(cm_df)
+
+```
+CV scores: 0.8188057124431823
+
+```{python}
+# For Logistic Regression
+logit = Pipeline([
+    ('preprocess', ct),
+    ('model', LogisticRegression())
+])
+
+# Fitting the pipe on the training data
+logit.fit(Xt, yt)
+
+# Finding cross-validated accuracy
+print(np.mean(cross_val_score(logit, X, y, cv=5, scoring='accuracy')))
+
+# Generating predictions on the validation set
+y_pred = logit.predict(Xv)
+
+# specifying class order for rows/columns
+labels = [False, True]
+
+# Designing a confusion matrix
+cm = confusion_matrix(yv, y_pred, labels=labels)
+cm_df = pd.DataFrame(cm, index=[f"Actual {lbl}" for lbl in labels], # appending row labels
+                    columns=[f"Predicted {lbl}" for lbl in labels]) # appending column labels
+print(cm_df)
+
+```
+CV scores: 0.825653987372713
+
 
 Hybrid vs. Not Hybrid
+```{python}
+# For SVC
+tmp = base.copy()
+tmp['hybrid'] = (tmp['Type'] == 'hybrid')
+
+X = tmp.drop(columns=['Type', 'hybrid'])
+y = tmp['hybrid']
+Xt, Xv, yt, yv = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+
+# Getting numeric and categorical variables
+num = X.select_dtypes(include=['number']).columns
+cat = X.select_dtypes(exclude=['number']).columns
+
+# Defining columnTransformer for preprocessing steps
+ct = ColumnTransformer(
+    transformers=[
+    ('num', StandardScaler(), num),
+    ('cat', OneHotEncoder(handle_unknown='ignore', sparse_output=False), cat)
+])
+
+SVCpipe = Pipeline([
+    ('preprocess', ct),
+    ('model', SVC())
+])
+
+# Fitting the pipe on the training data
+SVCpipe.fit(Xt, yt)
+
+# Finding cross-validated accuracy
+print(np.mean(cross_val_score(SVCpipe, X, y, cv=5, scoring='accuracy')))
+
+# Generating predictions on the validation set
+y_pred = SVCpipe.predict(Xv)
+
+# specifying class order for rows/columns
+labels = [False, True]
+
+# Designing a confusion matrix
+cm = confusion_matrix(yv, y_pred, labels=labels)
+cm_df = pd.DataFrame(cm, index=[f"Actual {lbl}" for lbl in labels], # appending row labels
+                    columns=[f"Predicted {lbl}" for lbl in labels]) # appending column labels
+print(cm_df)
+```
+cv scores: 0.6147834950749421
+
+```{python}
+# For Logistic Regression
+logit = Pipeline([
+    ('preprocess', ct),
+    ('model', LogisticRegression())
+])
+
+# Fitting the pipe on the training data
+logit.fit(Xt, yt)
+
+# Finding cross-validated accuracy
+print(np.mean(cross_val_score(logit, X, y, cv=5, scoring='accuracy')))
+
+# Generating predictions on the validation set
+y_pred = logit.predict(Xv)
+
+# specifying class order for rows/columns
+labels = [False, True]
+
+# Designing a confusion matrix
+cm = confusion_matrix(yv, y_pred, labels=labels)
+cm_df = pd.DataFrame(cm, index=[f"Actual {lbl}" for lbl in labels], # appending row labels
+                    columns=[f"Predicted {lbl}" for lbl in labels]) # appending column labels
+print(cm_df)
+
+```
+
+CV scores: 0.6193538656764543
 
 Q2
 Which of the six models did the best job distinguishing the target category from the rest? Which did the worst? Does this make intuitive sense?
+
+When assessing which of the 6 models did the best job distinguishing the target category from the rest, the Sativa vs. rest Logistic Regression (cv=.826), followed closely by Sativa SVC. The worst was Hybrid vs. rest (SVC = 0.615, logit = 0.619). Overall, this makes sense, as Sativa is the most distinct from the other two types, while Hybrid overlaps both Indica and Sativa, making it the hardest one vs rest separation.
 
 Q3
 Fit and report metrics for OvO versions of the models. That is, for each of the two model types, create three models:
