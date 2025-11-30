@@ -2259,17 +2259,17 @@ var requirejs,require,define;(function(global,setTimeout){var req,s,head,baseEle
 <p>Our goal will be to fit models that identify the Sativa types from the Indica types, and then to fit models that also distinguish the Hybrid types.</p>
 <p>IMPORTANT: In this assignment, you do not need to consider different feature sets. Normally, this would be a good thing to try - but for this homework, simply include all the predictors for every model.</p>
 <pre class="{bash}"><code>pip install plotnine</code></pre>
-<div id="1f9ce444" class="cell" data-execution_count="1">
+<div id="374bd7ca" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>os.environ.pop(<span class="st">&quot;QUARTO_EXECUTE_INFO&quot;</span>, <span class="va">None</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-display" data-execution_count="1">
-<pre><code>&#39;/var/folders/ky/q2g7htq53933q1sz4qt6rvjm0000gn/T/quarto-sessiona39a2eeb460a1709/74df07506bb318a9/ae8a2df394ef0ea2&#39;</code></pre>
+<pre><code>&#39;/var/folders/ky/q2g7htq53933q1sz4qt6rvjm0000gn/T/quarto-sessiond52ef41782c2771e/9aa0deec0d1dac34/79195a22544a6382&#39;</code></pre>
 </div>
 </div>
-<div id="a7518577" class="cell" data-execution_count="2">
+<div id="187d1b0c" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Importing all necessary libraries</span></span>
@@ -2290,7 +2290,7 @@ var requirejs,require,define;(function(global,setTimeout){var req,s,head,baseEle
 <span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-<div id="89895598" class="cell" data-execution_count="3">
+<div id="09d092a5" class="cell" data-execution_count="3">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reading in the data</span></span>
@@ -2619,7 +2619,7 @@ memory usage: 1.2+ MB</code></pre>
 <p>Output a confusion matrix.</p>
 <p>Q1: LDA Q2: QDA Q3: SVC Q4: SVM</p>
 <p>Creating a dataset with targets Indica and Sativa</p>
-<div id="e587730e" class="cell" data-execution_count="4">
+<div id="c2de9549" class="cell" data-execution_count="4">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Subsetting the dataset with limiting targets to Indica and Sativa</span></span>
@@ -2633,7 +2633,7 @@ memory usage: 1.2+ MB</code></pre>
 </div>
 </div>
 <p>Basic model setup</p>
-<div id="ef809334" class="cell" data-execution_count="5">
+<div id="2e21b2e4" class="cell" data-execution_count="5">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Creating target and explanatory variables</span></span>
@@ -2657,47 +2657,55 @@ memory usage: 1.2+ MB</code></pre>
 </div>
 <p>In this section, I use overall accuracy as the scoring metric. Since there’s no ‘positive’ class, accuracy is appropriate as it weighs the errors for both classes equally. The classes are also reasonably balanced, so the accuracy is informative and not dominated by one class.</p>
 <p>For LDA</p>
-<div id="1d121b67" class="cell" data-execution_count="6">
+<div id="3b8ba891" class="cell" data-execution_count="6">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Creating a pipeline for Linear Discriminatory Analysis</span></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>LDApipe <span class="op">=</span> Pipeline([</span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;preprocess&#39;</span>, ct),</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="co"># adding param solver=&#39;lsqr&#39; to mitigate issue when predictors exceeds the number of samples per class,</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="co"># using least squares formulation instead of SVD inversion so that the model tolerates high-dimensional</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># highly correlated feature sets.</span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;model&#39;</span>, LinearDiscriminantAnalysis(solver<span class="op">=</span><span class="st">&#39;lsqr&#39;</span>))</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>])</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Fitting the pipe on the training data</span></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>LDApipe.fit(Xt, yt)</span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Finding cross-validated accuracy</span></span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(np.mean(cross_val_score(LDApipe, X, y, cv<span class="op">=</span><span class="dv">5</span>)))</span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Generating predictions on the validation set</span></span>
-<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> LDApipe.predict(Xv)</span>
-<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="co"># specifying class order for rows/columns</span></span>
-<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>labels <span class="op">=</span> [<span class="st">&#39;indica&#39;</span>, <span class="st">&#39;sativa&#39;</span>]</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;model&#39;</span>, LinearDiscriminantAnalysis())</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Defining grid for the solver and shrinkage</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Since SVD doesn&#39;t support shrinkage, I used a list of dicts</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>LDAparams <span class="op">=</span> [</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    {<span class="st">&#39;model__solver&#39;</span>: [<span class="st">&#39;svd&#39;</span>]},</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    {<span class="st">&#39;model__solver&#39;</span>: [<span class="st">&#39;lsqr&#39;</span>, <span class="st">&#39;eigen&#39;</span>], <span class="st">&#39;model__shrinkage&#39;</span>: [<span class="fl">0.1</span>, <span class="fl">0.5</span>, <span class="fl">0.9</span>]}</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Running Grid Search</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>LDAgrid <span class="op">=</span> GridSearchCV(LDApipe, LDAparams, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">&#39;accuracy&#39;</span>)</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>LDAgrid.fit(Xt, yt)</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&#39;Best CV accuracy: </span><span class="sc">{</span>LDAgrid<span class="sc">.</span>best_score_<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&#39;Best Params: </span><span class="sc">{</span>LDAgrid<span class="sc">.</span>best_params_<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Designing a confusion matrix</span></span>
-<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>cm <span class="op">=</span> confusion_matrix(yv, y_pred, labels<span class="op">=</span>labels)</span>
-<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>cm_df <span class="op">=</span> pd.DataFrame(cm, index<span class="op">=</span>[<span class="ss">f&quot;Actual </span><span class="sc">{</span>lbl<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> lbl <span class="kw">in</span> labels], <span class="co"># appending row labels</span></span>
-<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>                    columns<span class="op">=</span>[<span class="ss">f&quot;Predicted </span><span class="sc">{</span>lbl<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> lbl <span class="kw">in</span> labels]) <span class="co"># appending column labels</span></span>
-<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(cm_df)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Generating predictions on the validation set using the best model</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>best_lda <span class="op">=</span> LDAgrid.best_estimator_</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> best_lda.predict(Xv)</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a><span class="co"># specifying class order for rows/columns</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>labels <span class="op">=</span> [<span class="st">&#39;indica&#39;</span>, <span class="st">&#39;sativa&#39;</span>]</span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a><span class="co"># Designing a confusion matrix</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>cm <span class="op">=</span> confusion_matrix(yv, y_pred, labels<span class="op">=</span>labels)</span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>cm_df <span class="op">=</span> pd.DataFrame(cm, index<span class="op">=</span>[<span class="ss">f&quot;Actual </span><span class="sc">{</span>lbl<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> lbl <span class="kw">in</span> labels], <span class="co"># appending row labels</span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>                    columns<span class="op">=</span>[<span class="ss">f&quot;Predicted </span><span class="sc">{</span>lbl<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> lbl <span class="kw">in</span> labels]) <span class="co"># appending column labels</span></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(cm_df)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>0.5205695230573472
+<pre><code>Best CV accuracy: 0.8723701410388717
+Best Params: {&#39;model__shrinkage&#39;: 0.9, &#39;model__solver&#39;: &#39;lsqr&#39;}
                Predicted indica  Predicted sativa
-Actual indica                52                65
-Actual sativa                50                47</code></pre>
+Actual indica               109                 8
+Actual sativa                20                77</code></pre>
 </div>
 </div>
-<p>For the LDA model, we find that the mean cross validated metric is 0.54</p>
+<p>For the LDA model, we find that the mean cross validated metric for the best LDA model was .87</p>
 <p>For QDA</p>
-<div id="347fba08" class="cell" data-execution_count="7">
+<div id="804f077e" class="cell" data-execution_count="7">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math</span>
@@ -2706,42 +2714,51 @@ Actual sativa                50                47</code></pre>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>QDApipe <span class="op">=</span> Pipeline([</span>
 <span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;preprocess&#39;</span>, ct),</span>
 <span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;pca&#39;</span>, PCA(n_components<span class="op">=</span><span class="fl">0.95</span>, random_state<span class="op">=</span><span class="dv">42</span>)), <span class="co"># reduces the collinearity</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;model&#39;</span>, QuadraticDiscriminantAnalysis(reg_param<span class="op">=</span><span class="fl">.9</span>))</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;model&#39;</span>, QuadraticDiscriminantAnalysis())</span>
 <span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>])</span>
 <span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Fitting the pipe on the training data</span></span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>QDApipe.fit(Xt, yt)</span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Finding cross-validated accuracy</span></span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(np.mean(cross_val_score(QDApipe, X, y, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">&#39;accuracy&#39;</span>)))</span>
-<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Generating predictions on the validation set</span></span>
-<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> QDApipe.predict(Xv)</span>
-<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="co"># specifying class order for rows/columns</span></span>
-<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>labels <span class="op">=</span> [<span class="st">&#39;indica&#39;</span>, <span class="st">&#39;sativa&#39;</span>]</span>
-<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Designing a confusion matrix</span></span>
-<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>cm <span class="op">=</span> confusion_matrix(yv, y_pred, labels<span class="op">=</span>labels)</span>
-<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>cm_df <span class="op">=</span> pd.DataFrame(cm, index<span class="op">=</span>[<span class="ss">f&quot;Actual </span><span class="sc">{</span>lbl<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> lbl <span class="kw">in</span> labels], <span class="co"># appending row labels</span></span>
-<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>                    columns<span class="op">=</span>[<span class="ss">f&quot;Predicted </span><span class="sc">{</span>lbl<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> lbl <span class="kw">in</span> labels]) <span class="co"># appending column labels</span></span>
-<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(cm_df)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Tuning the regularization params</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>qda_params <span class="op">=</span> {</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;model__reg_param&#39;</span>: [<span class="fl">0.0</span>, <span class="fl">0.1</span>, <span class="fl">0.3</span>, <span class="fl">0.5</span>, <span class="fl">0.7</span>, <span class="fl">0.9</span>, <span class="fl">1.0</span>]</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Running Grid Search</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>qdaGrid <span class="op">=</span> GridSearchCV(QDApipe, qda_params, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">&#39;accuracy&#39;</span>)</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Fitting the pipe on the training data</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>qdaGrid.fit(Xt, yt)</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&#39;Best CV accuracy: </span><span class="sc">{</span>qdaGrid<span class="sc">.</span>best_score_<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&#39;Best Params: </span><span class="sc">{</span>qdaGrid<span class="sc">.</span>best_params_<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Generating predictions on the validation set using best model</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>best_qda <span class="op">=</span> qdaGrid.best_estimator_</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> best_qda.predict(Xv)</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a><span class="co"># specifying class order for rows/columns</span></span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>labels <span class="op">=</span> [<span class="st">&#39;indica&#39;</span>, <span class="st">&#39;sativa&#39;</span>]</span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a><span class="co"># Designing a confusion matrix</span></span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>cm <span class="op">=</span> confusion_matrix(yv, y_pred, labels<span class="op">=</span>labels)</span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>cm_df <span class="op">=</span> pd.DataFrame(cm, index<span class="op">=</span>[<span class="ss">f&quot;Actual </span><span class="sc">{</span>lbl<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> lbl <span class="kw">in</span> labels], <span class="co"># appending row labels</span></span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>                    columns<span class="op">=</span>[<span class="ss">f&quot;Predicted </span><span class="sc">{</span>lbl<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> lbl <span class="kw">in</span> labels]) <span class="co"># appending column labels</span></span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(cm_df)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
-<div class="cell-output cell-output-stdout">
-<pre><code>nan
-               Predicted indica  Predicted sativa
-Actual indica               104                13
-Actual sativa                19                78</code></pre>
-</div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/opt/anaconda3/lib/python3.13/site-packages/sklearn/model_selection/_validation.py:528: FitFailedWarning: 
-1 fits failed out of a total of 5.
+<pre><code>/opt/anaconda3/lib/python3.13/site-packages/sklearn/discriminant_analysis.py:1024: LinAlgWarning: The covariance matrix of class 0 is not full rank. Increasing the value of parameter `reg_param` might help reducing the collinearity.
+/opt/anaconda3/lib/python3.13/site-packages/sklearn/discriminant_analysis.py:1024: LinAlgWarning: The covariance matrix of class 1 is not full rank. Increasing the value of parameter `reg_param` might help reducing the collinearity.
+/opt/anaconda3/lib/python3.13/site-packages/sklearn/discriminant_analysis.py:1024: LinAlgWarning: The covariance matrix of class 1 is not full rank. Increasing the value of parameter `reg_param` might help reducing the collinearity.
+/opt/anaconda3/lib/python3.13/site-packages/sklearn/discriminant_analysis.py:1024: LinAlgWarning: The covariance matrix of class 0 is not full rank. Increasing the value of parameter `reg_param` might help reducing the collinearity.
+/opt/anaconda3/lib/python3.13/site-packages/sklearn/discriminant_analysis.py:1024: LinAlgWarning: The covariance matrix of class 1 is not full rank. Increasing the value of parameter `reg_param` might help reducing the collinearity.
+/opt/anaconda3/lib/python3.13/site-packages/sklearn/discriminant_analysis.py:1024: LinAlgWarning: The covariance matrix of class 0 is not full rank. Increasing the value of parameter `reg_param` might help reducing the collinearity.
+/opt/anaconda3/lib/python3.13/site-packages/sklearn/discriminant_analysis.py:1024: LinAlgWarning: The covariance matrix of class 1 is not full rank. Increasing the value of parameter `reg_param` might help reducing the collinearity.
+/opt/anaconda3/lib/python3.13/site-packages/sklearn/model_selection/_validation.py:528: FitFailedWarning: 
+7 fits failed out of a total of 35.
 The score on these train-test partitions for these parameters will be set to nan.
 If these failures are not expected, you can try to debug them by setting error_score=&#39;raise&#39;.
 
 Below are more details about the failures:
 --------------------------------------------------------------------------------
-1 fits failed with the following error:
+7 fits failed with the following error:
 Traceback (most recent call last):
   File &quot;/opt/anaconda3/lib/python3.13/site-packages/sklearn/model_selection/_validation.py&quot;, line 866, in _fit_and_score
     estimator.fit(X_train, y_train, **fit_params)
@@ -2781,49 +2798,61 @@ Traceback (most recent call last):
   File &quot;/opt/anaconda3/lib/python3.13/site-packages/scipy/linalg/_decomp_svd.py&quot;, line 166, in svd
     raise LinAlgError(&quot;SVD did not converge&quot;)
 numpy.linalg.LinAlgError: SVD did not converge
-</code></pre>
+
+/opt/anaconda3/lib/python3.13/site-packages/sklearn/model_selection/_search.py:1108: UserWarning: One or more of the test scores are non-finite: [nan nan nan nan nan nan nan]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Best CV accuracy: nan
+Best Params: {&#39;model__reg_param&#39;: 0.0}
+               Predicted indica  Predicted sativa
+Actual indica                88                29
+Actual sativa                16                81</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/opt/anaconda3/lib/python3.13/site-packages/sklearn/discriminant_analysis.py:1024: LinAlgWarning: The covariance matrix of class 0 is not full rank. Increasing the value of parameter `reg_param` might help reducing the collinearity.
+/opt/anaconda3/lib/python3.13/site-packages/sklearn/discriminant_analysis.py:1024: LinAlgWarning: The covariance matrix of class 1 is not full rank. Increasing the value of parameter `reg_param` might help reducing the collinearity.</code></pre>
 </div>
 </div>
-<p>cross validated accuracy: 0.8314</p>
+<p>cross validated accuracy based on the best qda model: 0.87</p>
 <p>For SVC</p>
-<div id="7c4d1831" class="cell" data-execution_count="8">
+<div id="cb138df8" class="cell" data-execution_count="8">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Creating a pipeline for Support Vector Classifier</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>SVCpipe <span class="op">=</span> Pipeline([</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;preprocess&#39;</span>, ct),</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;model&#39;</span>, SVC())</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>])</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>svc_params <span class="op">=</span> {</span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;model__C&#39;</span>: [<span class="fl">0.1</span>, <span class="dv">1</span>],</span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;model__kernel&#39;</span>: [<span class="st">&#39;linear&#39;</span>, <span class="st">&#39;rbf&#39;</span>],</span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;model__gamma&#39;</span>: [<span class="st">&#39;scale&#39;</span>]</span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>svc_grid <span class="op">=</span> GridSearchCV(SVCpipe, svc_params, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">&#39;accuracy&#39;</span>)</span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Fitting the pipe on the training data</span></span>
-<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>svc_grid.fit(Xt, yt)</span>
-<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Finding the best score and best params</span></span>
-<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&#39;best CV accuracy (SVC)&#39;</span>, svc_grid.best_score_)</span>
-<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&#39;best params (SVC)&#39;</span>, svc_grid.best_params_)</span>
-<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Using the tuned model for validation predictions</span></span>
-<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>best_svc <span class="op">=</span> svc_grid.best_estimator_</span>
-<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Generating predictions on the validation set</span></span>
-<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> best_svc.predict(Xv)</span>
-<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a><span class="co"># specifying class order for rows/columns</span></span>
-<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a>labels <span class="op">=</span> [<span class="st">&#39;indica&#39;</span>, <span class="st">&#39;sativa&#39;</span>]</span>
-<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-31"><a href="#cb15-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Designing a confusion matrix</span></span>
-<span id="cb15-32"><a href="#cb15-32" aria-hidden="true" tabindex="-1"></a>cm <span class="op">=</span> confusion_matrix(yv, y_pred, labels<span class="op">=</span>labels)</span>
-<span id="cb15-33"><a href="#cb15-33" aria-hidden="true" tabindex="-1"></a>cm_df <span class="op">=</span> pd.DataFrame(cm, index<span class="op">=</span>[<span class="ss">f&quot;Actual </span><span class="sc">{</span>lbl<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> lbl <span class="kw">in</span> labels], <span class="co"># appending row labels</span></span>
-<span id="cb15-34"><a href="#cb15-34" aria-hidden="true" tabindex="-1"></a>                    columns<span class="op">=</span>[<span class="ss">f&quot;Predicted </span><span class="sc">{</span>lbl<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> lbl <span class="kw">in</span> labels]) <span class="co"># appending column labels</span></span>
-<span id="cb15-35"><a href="#cb15-35" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(cm_df)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Creating a pipeline for Support Vector Classifier</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>SVCpipe <span class="op">=</span> Pipeline([</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;preprocess&#39;</span>, ct),</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;model&#39;</span>, SVC())</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>svc_params <span class="op">=</span> {</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;model__C&#39;</span>: [<span class="fl">0.1</span>, <span class="dv">1</span>],</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;model__kernel&#39;</span>: [<span class="st">&#39;linear&#39;</span>, <span class="st">&#39;rbf&#39;</span>],</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;model__gamma&#39;</span>: [<span class="st">&#39;scale&#39;</span>]</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>svc_grid <span class="op">=</span> GridSearchCV(SVCpipe, svc_params, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">&#39;accuracy&#39;</span>)</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Fitting the pipe on the training data</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>svc_grid.fit(Xt, yt)</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Finding the best score and best params</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&#39;best CV accuracy (SVC)&#39;</span>, svc_grid.best_score_)</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&#39;best params (SVC)&#39;</span>, svc_grid.best_params_)</span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Using the tuned model for validation predictions</span></span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>best_svc <span class="op">=</span> svc_grid.best_estimator_</span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Generating predictions on the validation set</span></span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> best_svc.predict(Xv)</span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a><span class="co"># specifying class order for rows/columns</span></span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>labels <span class="op">=</span> [<span class="st">&#39;indica&#39;</span>, <span class="st">&#39;sativa&#39;</span>]</span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Designing a confusion matrix</span></span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a>cm <span class="op">=</span> confusion_matrix(yv, y_pred, labels<span class="op">=</span>labels)</span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a>cm_df <span class="op">=</span> pd.DataFrame(cm, index<span class="op">=</span>[<span class="ss">f&quot;Actual </span><span class="sc">{</span>lbl<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> lbl <span class="kw">in</span> labels], <span class="co"># appending row labels</span></span>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a>                    columns<span class="op">=</span>[<span class="ss">f&quot;Predicted </span><span class="sc">{</span>lbl<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> lbl <span class="kw">in</span> labels]) <span class="co"># appending column labels</span></span>
+<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(cm_df)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>best CV accuracy (SVC) 0.862999656002752
@@ -2835,42 +2864,42 @@ Actual sativa                22                75</code></pre>
 </div>
 <p>cross validated accuracy: 0.627</p>
 <p>For SVM</p>
-<div id="2a6a58bc" class="cell" data-execution_count="9">
+<div id="a19178ae" class="cell" data-execution_count="9">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Creating a pipeline for SVM</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>SVMpipe <span class="op">=</span> Pipeline([</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;preprocess&#39;</span>, ct),</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;model&#39;</span>, SVC(kernel<span class="op">=</span><span class="st">&#39;poly&#39;</span>))</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>])</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Tuning key hyperparams for the polynomial kernel</span></span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>svm_params <span class="op">=</span> {</span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;model__C&#39;</span>: [<span class="fl">0.1</span>, <span class="dv">1</span>],</span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;model__degree&#39;</span>: [<span class="dv">2</span>,<span class="dv">3</span>],</span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;model__gamma&#39;</span>: [<span class="st">&#39;scale&#39;</span>],</span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;model__coef0&#39;</span>: [<span class="dv">0</span>,<span class="dv">1</span>]</span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>svm_grid <span class="op">=</span> GridSearchCV(SVMpipe, svm_params, cv<span class="op">=</span><span class="dv">5</span>)</span>
-<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>svm_grid.fit(Xt, yt)</span>
-<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Cross validated accuracy for the best polynomial SVM</span></span>
-<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(svm_grid.best_score_)</span>
-<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(svm_grid.best_params_)</span>
-<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Generating predictions on the validation set using tuned model</span></span>
-<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>best_svm <span class="op">=</span> svm_grid.best_estimator_</span>
-<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> best_svm.predict(Xv)</span>
-<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a><span class="co"># specifying class order for rows/columns</span></span>
-<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>labels <span class="op">=</span> [<span class="st">&#39;indica&#39;</span>, <span class="st">&#39;sativa&#39;</span>]</span>
-<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a><span class="co"># Designing a confusion matrix</span></span>
-<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a>cm <span class="op">=</span> confusion_matrix(yv, y_pred, labels<span class="op">=</span>labels)</span>
-<span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a>cm_df <span class="op">=</span> pd.DataFrame(cm, index<span class="op">=</span>[<span class="ss">f&quot;Actual </span><span class="sc">{</span>lbl<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> lbl <span class="kw">in</span> labels], <span class="co"># appending row labels</span></span>
-<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a>                    columns<span class="op">=</span>[<span class="ss">f&quot;Predicted </span><span class="sc">{</span>lbl<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> lbl <span class="kw">in</span> labels]) <span class="co"># appending column labels</span></span>
-<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(cm_df)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Creating a pipeline for SVM</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>SVMpipe <span class="op">=</span> Pipeline([</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;preprocess&#39;</span>, ct),</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;model&#39;</span>, SVC(kernel<span class="op">=</span><span class="st">&#39;poly&#39;</span>))</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Tuning key hyperparams for the polynomial kernel</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>svm_params <span class="op">=</span> {</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;model__C&#39;</span>: [<span class="fl">0.1</span>, <span class="dv">1</span>],</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;model__degree&#39;</span>: [<span class="dv">2</span>,<span class="dv">3</span>],</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;model__gamma&#39;</span>: [<span class="st">&#39;scale&#39;</span>],</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;model__coef0&#39;</span>: [<span class="dv">0</span>,<span class="dv">1</span>]</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>svm_grid <span class="op">=</span> GridSearchCV(SVMpipe, svm_params, cv<span class="op">=</span><span class="dv">5</span>)</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>svm_grid.fit(Xt, yt)</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Cross validated accuracy for the best polynomial SVM</span></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(svm_grid.best_score_)</span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(svm_grid.best_params_)</span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Generating predictions on the validation set using tuned model</span></span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>best_svm <span class="op">=</span> svm_grid.best_estimator_</span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> best_svm.predict(Xv)</span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a><span class="co"># specifying class order for rows/columns</span></span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>labels <span class="op">=</span> [<span class="st">&#39;indica&#39;</span>, <span class="st">&#39;sativa&#39;</span>]</span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a><span class="co"># Designing a confusion matrix</span></span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a>cm <span class="op">=</span> confusion_matrix(yv, y_pred, labels<span class="op">=</span>labels)</span>
+<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a>cm_df <span class="op">=</span> pd.DataFrame(cm, index<span class="op">=</span>[<span class="ss">f&quot;Actual </span><span class="sc">{</span>lbl<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> lbl <span class="kw">in</span> labels], <span class="co"># appending row labels</span></span>
+<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a>                    columns<span class="op">=</span>[<span class="ss">f&quot;Predicted </span><span class="sc">{</span>lbl<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> lbl <span class="kw">in</span> labels]) <span class="co"># appending column labels</span></span>
+<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(cm_df)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>0.8571448228414171
@@ -2883,57 +2912,57 @@ Actual sativa                22                75</code></pre>
 <p>For the SVM model, we find that the mean cross validated metric is 0.61815</p>
 <p>Part Two: Natural Multiclass Now use the full dataset, including the Hybrid strains.</p>
 <p>Q1 Fit a decision tree, plot the final fit, and interpret the results.</p>
-<div id="a1d25180" class="cell" data-execution_count="10">
+<div id="fff85066" class="cell" data-execution_count="10">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>p2 <span class="op">=</span> df.dropna()</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Creating new target and explanatory variables</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> p2.drop(columns<span class="op">=</span>[<span class="st">&#39;Type&#39;</span>])</span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> p2[<span class="st">&#39;Type&#39;</span>]</span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>Xt, Xv, yt, yv <span class="op">=</span> train_test_split(X, y, test_size<span class="op">=</span><span class="fl">0.2</span>, random_state<span class="op">=</span><span class="dv">42</span>, stratify<span class="op">=</span>y)</span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Creating a pipeline for DTC</span></span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>tree <span class="op">=</span> Pipeline([</span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;preprocess&#39;</span>, ct),</span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;model&#39;</span>, DecisionTreeClassifier())</span>
-<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>])</span>
-<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>tree_grid <span class="op">=</span> {</span>
-<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;model__max_depth&#39;</span>: [<span class="dv">3</span>,<span class="dv">5</span>,<span class="dv">7</span>,<span class="dv">9</span>,<span class="dv">11</span>],</span>
-<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;model__min_samples_split&#39;</span>: [<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>],</span>
-<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;model__criterion&#39;</span>: [<span class="st">&#39;gini&#39;</span>, <span class="st">&#39;entropy&#39;</span>]</span>
-<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>grid_tree <span class="op">=</span> GridSearchCV(tree, tree_grid, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">&#39;accuracy&#39;</span>)</span>
-<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>grid_tree.fit(Xt, yt)</span>
-<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> grid_tree.predict(Xv)</span>
-<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&#39;tree accuracy&#39;</span>, accuracy_score(yv, y_pred))</span>
-<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&#39;classification report&#39;</span>, classification_report(yv, y_pred))</span>
-<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a><span class="co"># plot the tuned tree</span></span>
-<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a><span class="co"># getting tuned decision tree</span></span>
-<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a>best_tree <span class="op">=</span> grid_tree.best_estimator_</span>
-<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a><span class="co"># extracting importance scores</span></span>
-<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a>imp <span class="op">=</span> best_tree.named_steps[<span class="st">&#39;model&#39;</span>].feature_importances_</span>
-<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a><span class="co"># extracting feature names after preprocessing</span></span>
-<span id="cb19-36"><a href="#cb19-36" aria-hidden="true" tabindex="-1"></a>feat <span class="op">=</span> best_tree.named_steps[<span class="st">&#39;preprocess&#39;</span>].get_feature_names_out()</span>
-<span id="cb19-37"><a href="#cb19-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-38"><a href="#cb19-38" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">14</span>,<span class="dv">8</span>))</span>
-<span id="cb19-39"><a href="#cb19-39" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-40"><a href="#cb19-40" aria-hidden="true" tabindex="-1"></a>plot_tree(</span>
-<span id="cb19-41"><a href="#cb19-41" aria-hidden="true" tabindex="-1"></a>    best_tree.named_steps[<span class="st">&#39;model&#39;</span>],</span>
-<span id="cb19-42"><a href="#cb19-42" aria-hidden="true" tabindex="-1"></a>    feature_names<span class="op">=</span>feat,</span>
-<span id="cb19-43"><a href="#cb19-43" aria-hidden="true" tabindex="-1"></a>    class_names<span class="op">=</span>best_tree.named_steps[<span class="st">&#39;model&#39;</span>].classes_,</span>
-<span id="cb19-44"><a href="#cb19-44" aria-hidden="true" tabindex="-1"></a>    filled<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb19-45"><a href="#cb19-45" aria-hidden="true" tabindex="-1"></a>    max_depth<span class="op">=</span><span class="dv">3</span></span>
-<span id="cb19-46"><a href="#cb19-46" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb19-47"><a href="#cb19-47" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-48"><a href="#cb19-48" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">&#39;Decision Tree (top levels)&#39;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>p2 <span class="op">=</span> df.dropna()</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Creating new target and explanatory variables</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> p2.drop(columns<span class="op">=</span>[<span class="st">&#39;Type&#39;</span>])</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> p2[<span class="st">&#39;Type&#39;</span>]</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>Xt, Xv, yt, yv <span class="op">=</span> train_test_split(X, y, test_size<span class="op">=</span><span class="fl">0.2</span>, random_state<span class="op">=</span><span class="dv">42</span>, stratify<span class="op">=</span>y)</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Creating a pipeline for DTC</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>tree <span class="op">=</span> Pipeline([</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;preprocess&#39;</span>, ct),</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;model&#39;</span>, DecisionTreeClassifier())</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>tree_grid <span class="op">=</span> {</span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;model__max_depth&#39;</span>: [<span class="dv">3</span>,<span class="dv">5</span>,<span class="dv">7</span>,<span class="dv">9</span>,<span class="dv">11</span>],</span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;model__min_samples_split&#39;</span>: [<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>],</span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;model__criterion&#39;</span>: [<span class="st">&#39;gini&#39;</span>, <span class="st">&#39;entropy&#39;</span>]</span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>grid_tree <span class="op">=</span> GridSearchCV(tree, tree_grid, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">&#39;accuracy&#39;</span>)</span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>grid_tree.fit(Xt, yt)</span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> grid_tree.predict(Xv)</span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&#39;tree accuracy&#39;</span>, accuracy_score(yv, y_pred))</span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&#39;classification report&#39;</span>, classification_report(yv, y_pred))</span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a><span class="co"># plot the tuned tree</span></span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a><span class="co"># getting tuned decision tree</span></span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>best_tree <span class="op">=</span> grid_tree.best_estimator_</span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a><span class="co"># extracting importance scores</span></span>
+<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>imp <span class="op">=</span> best_tree.named_steps[<span class="st">&#39;model&#39;</span>].feature_importances_</span>
+<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a><span class="co"># extracting feature names after preprocessing</span></span>
+<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a>feat <span class="op">=</span> best_tree.named_steps[<span class="st">&#39;preprocess&#39;</span>].get_feature_names_out()</span>
+<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">14</span>,<span class="dv">8</span>))</span>
+<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-40"><a href="#cb20-40" aria-hidden="true" tabindex="-1"></a>plot_tree(</span>
+<span id="cb20-41"><a href="#cb20-41" aria-hidden="true" tabindex="-1"></a>    best_tree.named_steps[<span class="st">&#39;model&#39;</span>],</span>
+<span id="cb20-42"><a href="#cb20-42" aria-hidden="true" tabindex="-1"></a>    feature_names<span class="op">=</span>feat,</span>
+<span id="cb20-43"><a href="#cb20-43" aria-hidden="true" tabindex="-1"></a>    class_names<span class="op">=</span>best_tree.named_steps[<span class="st">&#39;model&#39;</span>].classes_,</span>
+<span id="cb20-44"><a href="#cb20-44" aria-hidden="true" tabindex="-1"></a>    filled<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb20-45"><a href="#cb20-45" aria-hidden="true" tabindex="-1"></a>    max_depth<span class="op">=</span><span class="dv">3</span></span>
+<span id="cb20-46"><a href="#cb20-46" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb20-47"><a href="#cb20-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-48"><a href="#cb20-48" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">&#39;Decision Tree (top levels)&#39;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>tree accuracy 0.5831435079726651
@@ -2959,27 +2988,27 @@ weighted avg       0.57      0.58      0.57       439
 </div>
 </div>
 </div>
-<div id="8014e1b1" class="cell" data-execution_count="11">
+<div id="c29ade51" class="cell" data-execution_count="11">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Building a dataframe of top important feature for plotting</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>formatted <span class="op">=</span> (</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    pd.DataFrame({<span class="st">&#39;feature&#39;</span>: feat, <span class="st">&#39;importance&#39;</span>: imp})</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>                .sort_values(<span class="st">&#39;importance&#39;</span>, ascending<span class="op">=</span><span class="va">False</span>)</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>                .head(<span class="dv">10</span>) <span class="co"># Limiting to 15 entries</span></span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Plotting</span></span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>(</span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>    ggplot(formatted, aes(x<span class="op">=</span><span class="st">&#39;reorder(feature, importance)&#39;</span>, y<span class="op">=</span><span class="st">&#39;importance&#39;</span>))</span>
-<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_col()</span>
-<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> coord_flip()</span>
-<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> labs(</span>
-<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span><span class="st">&#39;feature&#39;</span>,</span>
-<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>        y<span class="op">=</span><span class="st">&#39;importance&#39;</span>,</span>
-<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>        title<span class="op">=</span><span class="st">&#39;Decision Tree Feature Importances (top 10)&#39;</span></span>
-<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Building a dataframe of top important feature for plotting</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>formatted <span class="op">=</span> (</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    pd.DataFrame({<span class="st">&#39;feature&#39;</span>: feat, <span class="st">&#39;importance&#39;</span>: imp})</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>                .sort_values(<span class="st">&#39;importance&#39;</span>, ascending<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>                .head(<span class="dv">10</span>) <span class="co"># Limiting to 15 entries</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Plotting</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>(</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>    ggplot(formatted, aes(x<span class="op">=</span><span class="st">&#39;reorder(feature, importance)&#39;</span>, y<span class="op">=</span><span class="st">&#39;importance&#39;</span>))</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_col()</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> coord_flip()</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> labs(</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span><span class="st">&#39;feature&#39;</span>,</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>        y<span class="op">=</span><span class="st">&#39;importance&#39;</span>,</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>        title<span class="op">=</span><span class="st">&#39;Decision Tree Feature Importances (top 10)&#39;</span></span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-display" data-execution_count="11">
 <div>
@@ -2991,73 +3020,88 @@ weighted avg       0.57      0.58      0.57       439
 </div>
 <p>From interpreting the plot of the fitted Decision Tree Classifier, we’re able to see that the top split drivers are ‘sleepy’, ‘energetic’, ‘relaxed’, ‘citrus’, ‘uplifted’, and ‘rating’, with ‘sleepy’ accountign for most of the impurity reduction (~0.78).</p>
 <p>Q2 Repeat the analyses from Part One for LDA, QDA, and KNN.</p>
-<div id="b5a2d5f3" class="cell" data-execution_count="12">
+<div id="5256ae50" class="cell" data-execution_count="12">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For LDA</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Creating a pipeline for Linear Discriminatory Analysis</span></span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>LDApipe <span class="op">=</span> Pipeline([</span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;preprocess&#39;</span>, ct),</span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    <span class="co"># adding param solver=&#39;lsqr&#39; to mitigate issue when predictors exceeds the number of samples per class,</span></span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="co"># using least squares formulation instead of SVD inversion so that the model tolerates high-dimensional</span></span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># highly correlated feature sets.</span></span>
-<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;model&#39;</span>, LinearDiscriminantAnalysis(solver<span class="op">=</span><span class="st">&#39;lsqr&#39;</span>))</span>
-<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>])</span>
-<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Fitting the pipe on the training data</span></span>
-<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>LDApipe.fit(Xt, yt)</span>
-<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Finding cross-validated accuracy</span></span>
-<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(np.mean(cross_val_score(LDApipe, X, y, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">&#39;accuracy&#39;</span>)))</span>
-<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Generating predictions on the validation set</span></span>
-<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> LDApipe.predict(Xv)</span>
-<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a><span class="co"># specifying class order for rows/columns</span></span>
-<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a>labels <span class="op">=</span> [<span class="st">&#39;indica&#39;</span>, <span class="st">&#39;sativa&#39;</span>, <span class="st">&#39;hybrid&#39;</span>]</span>
-<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Designing a confusion matrix</span></span>
-<span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a>cm <span class="op">=</span> confusion_matrix(yv, y_pred, labels<span class="op">=</span>labels)</span>
-<span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a>cm_df <span class="op">=</span> pd.DataFrame(cm, index<span class="op">=</span>[<span class="ss">f&quot;Actual </span><span class="sc">{</span>lbl<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> lbl <span class="kw">in</span> labels], <span class="co"># appending row labels</span></span>
-<span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a>                    columns<span class="op">=</span>[<span class="ss">f&quot;Predicted </span><span class="sc">{</span>lbl<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> lbl <span class="kw">in</span> labels]) <span class="co"># appending column labels</span></span>
-<span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(cm_df)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For LDA</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Creating a pipeline for Linear Discriminatory Analysis</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>LDApipe <span class="op">=</span> Pipeline([</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;preprocess&#39;</span>, ct),</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;model&#39;</span>, LinearDiscriminantAnalysis())</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Defining grid for the solver and shrinkage</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Since SVD doesn&#39;t support shrinkage, I used a list of dicts</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>LDAparams <span class="op">=</span> [</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>    {<span class="st">&#39;model__solver&#39;</span>: [<span class="st">&#39;svd&#39;</span>]},</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>    {<span class="st">&#39;model__solver&#39;</span>: [<span class="st">&#39;lsqr&#39;</span>, <span class="st">&#39;eigen&#39;</span>], <span class="st">&#39;model__shrinkage&#39;</span>: [<span class="fl">0.1</span>, <span class="fl">0.5</span>, <span class="fl">0.9</span>]}</span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Running Grid Search</span></span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>LDAgrid <span class="op">=</span> GridSearchCV(LDApipe, LDAparams, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">&#39;accuracy&#39;</span>)</span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>LDAgrid.fit(Xt, yt)</span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&#39;Best CV accuracy: </span><span class="sc">{</span>LDAgrid<span class="sc">.</span>best_score_<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&#39;Best Params: </span><span class="sc">{</span>LDAgrid<span class="sc">.</span>best_params_<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Generating predictions on the validation set using the best model</span></span>
+<span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a>best_lda <span class="op">=</span> LDAgrid.best_estimator_</span>
+<span id="cb24-25"><a href="#cb24-25" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> best_lda.predict(Xv)</span>
+<span id="cb24-26"><a href="#cb24-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-27"><a href="#cb24-27" aria-hidden="true" tabindex="-1"></a><span class="co"># specifying class order for rows/columns</span></span>
+<span id="cb24-28"><a href="#cb24-28" aria-hidden="true" tabindex="-1"></a>labels <span class="op">=</span> [<span class="st">&#39;indica&#39;</span>, <span class="st">&#39;sativa&#39;</span>]</span>
+<span id="cb24-29"><a href="#cb24-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-30"><a href="#cb24-30" aria-hidden="true" tabindex="-1"></a><span class="co"># Designing a confusion matrix</span></span>
+<span id="cb24-31"><a href="#cb24-31" aria-hidden="true" tabindex="-1"></a>cm <span class="op">=</span> confusion_matrix(yv, y_pred, labels<span class="op">=</span>labels)</span>
+<span id="cb24-32"><a href="#cb24-32" aria-hidden="true" tabindex="-1"></a>cm_df <span class="op">=</span> pd.DataFrame(cm, index<span class="op">=</span>[<span class="ss">f&quot;Actual </span><span class="sc">{</span>lbl<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> lbl <span class="kw">in</span> labels], <span class="co"># appending row labels</span></span>
+<span id="cb24-33"><a href="#cb24-33" aria-hidden="true" tabindex="-1"></a>                    columns<span class="op">=</span>[<span class="ss">f&quot;Predicted </span><span class="sc">{</span>lbl<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> lbl <span class="kw">in</span> labels]) <span class="co"># appending column labels</span></span>
+<span id="cb24-34"><a href="#cb24-34" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(cm_df)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>0.30945902372556977
-               Predicted indica  Predicted sativa  Predicted hybrid
-Actual indica                61                55                16
-Actual sativa                40                34                 8
-Actual hybrid               106                93                26</code></pre>
+<pre><code>Best CV accuracy: 0.6301408221408222
+Best Params: {&#39;model__shrinkage&#39;: 0.5, &#39;model__solver&#39;: &#39;lsqr&#39;}
+               Predicted indica  Predicted sativa
+Actual indica                91                 4
+Actual sativa                 9                35</code></pre>
 </div>
 </div>
-<p>cross validated accuracy: 0.3094756659489708</p>
-<div id="1b20aa51" class="cell" data-execution_count="13">
+<p>cross validated accuracy: 0.6301</p>
+<div id="61934ff4" class="cell" data-execution_count="13">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For QDA</span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Creating a pipeline for Quadratic Discriminatory Analysis</span></span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>QDApipe <span class="op">=</span> Pipeline([</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;preprocess&#39;</span>, ct),</span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;model&#39;</span>, QuadraticDiscriminantAnalysis())</span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>])</span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Fitting the pipe on the training data</span></span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>QDApipe.fit(Xt, yt)</span>
-<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Finding cross-validated accuracy</span></span>
-<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(np.mean(cross_val_score(QDApipe, X, y, cv<span class="op">=</span><span class="dv">5</span>)))</span>
-<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Generating predictions on the validation set</span></span>
-<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> QDApipe.predict(Xv)</span>
-<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a><span class="co"># specifying class order for rows/columns</span></span>
-<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>labels <span class="op">=</span> [<span class="st">&#39;indica&#39;</span>, <span class="st">&#39;sativa&#39;</span>, <span class="st">&#39;hybrid&#39;</span>]</span>
-<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Designing a confusion matrix</span></span>
-<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>cm <span class="op">=</span> confusion_matrix(yv, y_pred, labels<span class="op">=</span>labels)</span>
-<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>cm_df <span class="op">=</span> pd.DataFrame(cm, index<span class="op">=</span>[<span class="ss">f&quot;Actual </span><span class="sc">{</span>lbl<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> lbl <span class="kw">in</span> labels], <span class="co"># appending row labels</span></span>
-<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a>                    columns<span class="op">=</span>[<span class="ss">f&quot;Predicted </span><span class="sc">{</span>lbl<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> lbl <span class="kw">in</span> labels]) <span class="co"># appending column labels</span></span>
-<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(cm_df)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Creating a pipeline for Quadratic Discriminatory Analysis</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>QDApipe <span class="op">=</span> Pipeline([</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;preprocess&#39;</span>, ct),</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;pca&#39;</span>, PCA(n_components<span class="op">=</span><span class="fl">0.95</span>, random_state<span class="op">=</span><span class="dv">42</span>)), <span class="co"># reduces the collinearity</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;model&#39;</span>, QuadraticDiscriminantAnalysis())</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Tuning the regularization params</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>qda_params <span class="op">=</span> {</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;model__reg_param&#39;</span>: [<span class="fl">0.0</span>, <span class="fl">0.1</span>, <span class="fl">0.3</span>, <span class="fl">0.5</span>, <span class="fl">0.7</span>, <span class="fl">0.9</span>, <span class="fl">1.0</span>]</span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Running Grid Search</span></span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>qdaGrid <span class="op">=</span> GridSearchCV(QDApipe, qda_params, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">&#39;accuracy&#39;</span>)</span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Fitting the pipe on the training data</span></span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>qdaGrid.fit(Xt, yt)</span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&#39;Best CV accuracy: </span><span class="sc">{</span>qdaGrid<span class="sc">.</span>best_score_<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&#39;Best Params: </span><span class="sc">{</span>qdaGrid<span class="sc">.</span>best_params_<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Generating predictions on the validation set using best model</span></span>
+<span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a>best_qda <span class="op">=</span> qdaGrid.best_estimator_</span>
+<span id="cb26-23"><a href="#cb26-23" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> best_qda.predict(Xv)</span>
+<span id="cb26-24"><a href="#cb26-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-25"><a href="#cb26-25" aria-hidden="true" tabindex="-1"></a><span class="co"># specifying class order for rows/columns</span></span>
+<span id="cb26-26"><a href="#cb26-26" aria-hidden="true" tabindex="-1"></a>labels <span class="op">=</span> [<span class="st">&#39;indica&#39;</span>, <span class="st">&#39;sativa&#39;</span>]</span>
+<span id="cb26-27"><a href="#cb26-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-28"><a href="#cb26-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Designing a confusion matrix</span></span>
+<span id="cb26-29"><a href="#cb26-29" aria-hidden="true" tabindex="-1"></a>cm <span class="op">=</span> confusion_matrix(yv, y_pred, labels<span class="op">=</span>labels)</span>
+<span id="cb26-30"><a href="#cb26-30" aria-hidden="true" tabindex="-1"></a>cm_df <span class="op">=</span> pd.DataFrame(cm, index<span class="op">=</span>[<span class="ss">f&quot;Actual </span><span class="sc">{</span>lbl<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> lbl <span class="kw">in</span> labels], <span class="co"># appending row labels</span></span>
+<span id="cb26-31"><a href="#cb26-31" aria-hidden="true" tabindex="-1"></a>                    columns<span class="op">=</span>[<span class="ss">f&quot;Predicted </span><span class="sc">{</span>lbl<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> lbl <span class="kw">in</span> labels]) <span class="co"># appending column labels</span></span>
+<span id="cb26-32"><a href="#cb26-32" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(cm_df)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stderr">
 <pre><code>/opt/anaconda3/lib/python3.13/site-packages/sklearn/discriminant_analysis.py:1024: LinAlgWarning: The covariance matrix of class 0 is not full rank. Increasing the value of parameter `reg_param` might help reducing the collinearity.
@@ -3077,46 +3121,15 @@ Actual hybrid               106                93                26</code></pre>
 /opt/anaconda3/lib/python3.13/site-packages/sklearn/discriminant_analysis.py:1024: LinAlgWarning: The covariance matrix of class 2 is not full rank. Increasing the value of parameter `reg_param` might help reducing the collinearity.</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>nan
-               Predicted indica  Predicted sativa  Predicted hybrid
-Actual indica                70                32                30
-Actual sativa                17                40                25
-Actual hybrid                83                76                66</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>/opt/anaconda3/lib/python3.13/site-packages/sklearn/model_selection/_validation.py:528: FitFailedWarning: 
-1 fits failed out of a total of 5.
-The score on these train-test partitions for these parameters will be set to nan.
-If these failures are not expected, you can try to debug them by setting error_score=&#39;raise&#39;.
-
-Below are more details about the failures:
---------------------------------------------------------------------------------
-1 fits failed with the following error:
-Traceback (most recent call last):
-  File &quot;/opt/anaconda3/lib/python3.13/site-packages/sklearn/model_selection/_validation.py&quot;, line 866, in _fit_and_score
-    estimator.fit(X_train, y_train, **fit_params)
-    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File &quot;/opt/anaconda3/lib/python3.13/site-packages/sklearn/base.py&quot;, line 1389, in wrapper
-    return fit_method(estimator, *args, **kwargs)
-  File &quot;/opt/anaconda3/lib/python3.13/site-packages/sklearn/pipeline.py&quot;, line 662, in fit
-    self._final_estimator.fit(Xt, y, **last_step_params[&quot;fit&quot;])
-    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File &quot;/opt/anaconda3/lib/python3.13/site-packages/sklearn/base.py&quot;, line 1389, in wrapper
-    return fit_method(estimator, *args, **kwargs)
-  File &quot;/opt/anaconda3/lib/python3.13/site-packages/sklearn/discriminant_analysis.py&quot;, line 1019, in fit
-    _, S, Vt = np.linalg.svd(Xgc, full_matrices=False)
-               ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File &quot;/opt/anaconda3/lib/python3.13/site-packages/numpy/linalg/_linalg.py&quot;, line 1839, in svd
-    u, s, vh = gufunc(a, signature=signature)
-               ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
-  File &quot;/opt/anaconda3/lib/python3.13/site-packages/numpy/linalg/_linalg.py&quot;, line 113, in _raise_linalgerror_svd_nonconvergence
-    raise LinAlgError(&quot;SVD did not converge&quot;)
-numpy.linalg.LinAlgError: SVD did not converge
-</code></pre>
+<pre><code>Best CV accuracy: 0.6289898249898249
+Best Params: {&#39;model__reg_param&#39;: 1.0}
+               Predicted indica  Predicted sativa
+Actual indica                89                 3
+Actual sativa                 7                33</code></pre>
 </div>
 </div>
-<p>cross validated accuracy: 0.34362550836791794</p>
-<div id="737e1c4c" class="cell" data-execution_count="14">
+<p>cross validated accuracy: 0.63</p>
+<div id="5936f329" class="cell" data-execution_count="14">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For kNN</span></span>
@@ -3162,7 +3175,7 @@ Actual hybrid                44                11               170</code></pre>
 <p>Part Three: Multiclass from Binary Consider two models designed for binary classification: SVC and Logistic Regression.</p>
 <p>Q1 Fit and report metrics for OvR versions of the models. That is, for each of the two model types, create three models:</p>
 <p>Indica vs. Not Indica</p>
-<div id="b66ebe22" class="cell" data-execution_count="15">
+<div id="f1d33d88" class="cell" data-execution_count="15">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For SVC</span></span>
@@ -3217,7 +3230,7 @@ Actual True                56              76</code></pre>
 </div>
 </div>
 <p>cv score: 0.7781945267887791</p>
-<div id="84e5350f" class="cell" data-execution_count="16">
+<div id="3d4481f2" class="cell" data-execution_count="16">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For Logistic Regression</span></span>
@@ -3253,7 +3266,7 @@ Actual True                47              85</code></pre>
 </div>
 <p>cv score: 0.7864085041761579</p>
 <p>Sativa vs. Not Sativa</p>
-<div id="023068f5" class="cell" data-execution_count="17">
+<div id="9ac86fd8" class="cell" data-execution_count="17">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For SVC</span></span>
@@ -3307,7 +3320,7 @@ Actual True                69              13</code></pre>
 </div>
 </div>
 <p>CV scores: 0.8188057124431823</p>
-<div id="8256db4e" class="cell" data-execution_count="18">
+<div id="feb709d6" class="cell" data-execution_count="18">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For Logistic Regression</span></span>
@@ -3343,7 +3356,7 @@ Actual True                62              20</code></pre>
 </div>
 <p>CV scores: 0.825653987372713</p>
 <p>Hybrid vs. Not Hybrid</p>
-<div id="cb5fad99" class="cell" data-execution_count="19">
+<div id="05b79923" class="cell" data-execution_count="19">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For SVC</span></span>
@@ -3396,7 +3409,7 @@ Actual True                74             151</code></pre>
 </div>
 </div>
 <p>cv scores: 0.6147834950749421</p>
-<div id="02d55865" class="cell" data-execution_count="20">
+<div id="c831d6be" class="cell" data-execution_count="20">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For Logistic Regression</span></span>
@@ -3435,7 +3448,7 @@ Actual True                55             170</code></pre>
 <p>When assessing which of the 6 models did the best job distinguishing the target category from the rest, the Sativa vs. rest Logistic Regression (cv=.826), followed closely by Sativa SVC. The worst was Hybrid vs. rest (SVC = 0.615, logit = 0.619). Overall, this makes sense, as Sativa is the most distinct from the other two types, while Hybrid overlaps both Indica and Sativa, making it the hardest one vs rest separation.</p>
 <p>Q3 Fit and report metrics for OvO versions of the models. That is, for each of the two model types, create three models:</p>
 <p>Indica vs. Sativa</p>
-<div id="99eeec99" class="cell" data-execution_count="21">
+<div id="5e08fe3b" class="cell" data-execution_count="21">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For Logistic Regression</span></span>
@@ -3492,7 +3505,7 @@ Actual True                11             121</code></pre>
 </div>
 </div>
 <p>Cross validated accuracy score: 0.8539423456627617</p>
-<div id="65c06b26" class="cell" data-execution_count="22">
+<div id="e2063ce7" class="cell" data-execution_count="22">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For Logistic Regression</span></span>
@@ -3541,7 +3554,7 @@ Actual True                12             120</code></pre>
 </div>
 <p>Cross validation accuracy score: 0.8408757843008206</p>
 <p>Indica vs. Hybrid</p>
-<div id="1fdcc58e" class="cell" data-execution_count="23">
+<div id="08f4a790" class="cell" data-execution_count="23">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For Logistic Regression</span></span>
@@ -3598,7 +3611,7 @@ Actual True                53              79</code></pre>
 </div>
 </div>
 <p>Cross validated accuracy score: 0.7401882101155068</p>
-<div id="6e80f5a3" class="cell" data-execution_count="24">
+<div id="90c52eab" class="cell" data-execution_count="24">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>ovo <span class="op">=</span> df.dropna()</span>
@@ -3646,7 +3659,7 @@ Actual True                49              83</code></pre>
 </div>
 <p>Cross validation accuracy score: 0.7317801277814496</p>
 <p>Hybrid vs. Sativa</p>
-<div id="7fdf9a58" class="cell" data-execution_count="25">
+<div id="343f877d" class="cell" data-execution_count="25">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For Logistic Regression</span></span>
@@ -3703,7 +3716,7 @@ Actual True                22             203</code></pre>
 </div>
 </div>
 <p>Cross validated accuracy score: 0.7506482723382513</p>
-<div id="3acf0866" class="cell" data-execution_count="26">
+<div id="390d8ade" class="cell" data-execution_count="26">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>ovo <span class="op">=</span> df.dropna()</span>

@@ -134,20 +134,27 @@ import math
 # Creating a pipeline for Linear Discriminatory Analysis
 LDApipe = Pipeline([
     ('preprocess', ct),
-    # adding param solver='lsqr' to mitigate issue when predictors exceeds the number of samples per class,
-    # using least squares formulation instead of SVD inversion so that the model tolerates high-dimensional
-    # highly correlated feature sets.
-    ('model', LinearDiscriminantAnalysis(solver='lsqr'))
+    ('model', LinearDiscriminantAnalysis())
 ])
 
-# Fitting the pipe on the training data
-LDApipe.fit(Xt, yt)
+# Defining grid for the solver and shrinkage
+# Since SVD doesn't support shrinkage, I used a list of dicts
+LDAparams = [
+    {'model__solver': ['svd']},
+    {'model__solver': ['lsqr', 'eigen'], 'model__shrinkage': [0.1, 0.5, 0.9]}
+]
 
-# Finding cross-validated accuracy
-print(np.mean(cross_val_score(LDApipe, X, y, cv=5)))
+# Running Grid Search
+LDAgrid = GridSearchCV(LDApipe, LDAparams, cv=5, scoring='accuracy')
+LDAgrid.fit(Xt, yt)
 
-# Generating predictions on the validation set
-y_pred = LDApipe.predict(Xv)
+print(f'Best CV accuracy: {LDAgrid.best_score_}')
+print(f'Best Params: {LDAgrid.best_params_}')
+
+
+# Generating predictions on the validation set using the best model
+best_lda = LDAgrid.best_estimator_
+y_pred = best_lda.predict(Xv)
 
 # specifying class order for rows/columns
 labels = ['indica', 'sativa']
@@ -159,7 +166,7 @@ cm_df = pd.DataFrame(cm, index=[f"Actual {lbl}" for lbl in labels], # appending 
 print(cm_df)
 
 ```
-For the LDA model, we find that the mean cross validated metric is 0.54
+For the LDA model, we find that the mean cross validated metric for the best LDA model was .87
 
 
 For QDA
@@ -170,17 +177,25 @@ from sklearn.decomposition import PCA
 QDApipe = Pipeline([
     ('preprocess', ct),
     ('pca', PCA(n_components=0.95, random_state=42)), # reduces the collinearity
-    ('model', QuadraticDiscriminantAnalysis(reg_param=.9))
+    ('model', QuadraticDiscriminantAnalysis())
 ])
 
+# Tuning the regularization params
+qda_params = {
+    'model__reg_param': [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
+}
+
+# Running Grid Search
+qdaGrid = GridSearchCV(QDApipe, qda_params, cv=5, scoring='accuracy')
 # Fitting the pipe on the training data
-QDApipe.fit(Xt, yt)
+qdaGrid.fit(Xt, yt)
 
-# Finding cross-validated accuracy
-print(np.mean(cross_val_score(QDApipe, X, y, cv=5, scoring='accuracy')))
+print(f'Best CV accuracy: {qdaGrid.best_score_}')
+print(f'Best Params: {qdaGrid.best_params_}')
 
-# Generating predictions on the validation set
-y_pred = QDApipe.predict(Xv)
+# Generating predictions on the validation set using best model
+best_qda = qdaGrid.best_estimator_
+y_pred = best_qda.predict(Xv)
 
 # specifying class order for rows/columns
 labels = ['indica', 'sativa']
@@ -192,7 +207,7 @@ cm_df = pd.DataFrame(cm, index=[f"Actual {lbl}" for lbl in labels], # appending 
 print(cm_df)
 
 ```
-cross validated accuracy: 0.8314
+cross validated accuracy based on the best qda model: 0.87
 
 
 For SVC
@@ -363,23 +378,30 @@ Repeat the analyses from Part One for LDA, QDA, and KNN.
 # Creating a pipeline for Linear Discriminatory Analysis
 LDApipe = Pipeline([
     ('preprocess', ct),
-    # adding param solver='lsqr' to mitigate issue when predictors exceeds the number of samples per class,
-    # using least squares formulation instead of SVD inversion so that the model tolerates high-dimensional
-    # highly correlated feature sets.
-    ('model', LinearDiscriminantAnalysis(solver='lsqr'))
+    ('model', LinearDiscriminantAnalysis())
 ])
 
-# Fitting the pipe on the training data
-LDApipe.fit(Xt, yt)
+# Defining grid for the solver and shrinkage
+# Since SVD doesn't support shrinkage, I used a list of dicts
+LDAparams = [
+    {'model__solver': ['svd']},
+    {'model__solver': ['lsqr', 'eigen'], 'model__shrinkage': [0.1, 0.5, 0.9]}
+]
 
-# Finding cross-validated accuracy
-print(np.mean(cross_val_score(LDApipe, X, y, cv=5, scoring='accuracy')))
+# Running Grid Search
+LDAgrid = GridSearchCV(LDApipe, LDAparams, cv=5, scoring='accuracy')
+LDAgrid.fit(Xt, yt)
 
-# Generating predictions on the validation set
-y_pred = LDApipe.predict(Xv)
+print(f'Best CV accuracy: {LDAgrid.best_score_}')
+print(f'Best Params: {LDAgrid.best_params_}')
+
+
+# Generating predictions on the validation set using the best model
+best_lda = LDAgrid.best_estimator_
+y_pred = best_lda.predict(Xv)
 
 # specifying class order for rows/columns
-labels = ['indica', 'sativa', 'hybrid']
+labels = ['indica', 'sativa']
 
 # Designing a confusion matrix
 cm = confusion_matrix(yv, y_pred, labels=labels)
@@ -387,37 +409,45 @@ cm_df = pd.DataFrame(cm, index=[f"Actual {lbl}" for lbl in labels], # appending 
                     columns=[f"Predicted {lbl}" for lbl in labels]) # appending column labels
 print(cm_df)
 
-
 ```
-cross validated accuracy: 0.3094756659489708
+cross validated accuracy: 0.6301
 
 ```{python}
-# For QDA
 # Creating a pipeline for Quadratic Discriminatory Analysis
 QDApipe = Pipeline([
     ('preprocess', ct),
+    ('pca', PCA(n_components=0.95, random_state=42)), # reduces the collinearity
     ('model', QuadraticDiscriminantAnalysis())
 ])
 
+# Tuning the regularization params
+qda_params = {
+    'model__reg_param': [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
+}
+
+# Running Grid Search
+qdaGrid = GridSearchCV(QDApipe, qda_params, cv=5, scoring='accuracy')
 # Fitting the pipe on the training data
-QDApipe.fit(Xt, yt)
+qdaGrid.fit(Xt, yt)
 
-# Finding cross-validated accuracy
-print(np.mean(cross_val_score(QDApipe, X, y, cv=5)))
+print(f'Best CV accuracy: {qdaGrid.best_score_}')
+print(f'Best Params: {qdaGrid.best_params_}')
 
-# Generating predictions on the validation set
-y_pred = QDApipe.predict(Xv)
+# Generating predictions on the validation set using best model
+best_qda = qdaGrid.best_estimator_
+y_pred = best_qda.predict(Xv)
 
 # specifying class order for rows/columns
-labels = ['indica', 'sativa', 'hybrid']
+labels = ['indica', 'sativa']
 
 # Designing a confusion matrix
 cm = confusion_matrix(yv, y_pred, labels=labels)
 cm_df = pd.DataFrame(cm, index=[f"Actual {lbl}" for lbl in labels], # appending row labels
                     columns=[f"Predicted {lbl}" for lbl in labels]) # appending column labels
 print(cm_df)
+
 ```
-cross validated accuracy: 0.34362550836791794
+cross validated accuracy: 0.63
 
 ```{python}
 # For kNN
