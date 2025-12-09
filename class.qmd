@@ -13,55 +13,57 @@ echo: true
 ```{python}
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score, StratifiedKFold
+from sklearn.model_selection import GridSearchCV, cross_val_score, StratifiedKFold
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.pipeline import Pipeline
-from sklearn.impute import SimpleImputer
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.decomposition import PCA
 
-# Load data
+# Load the training and test datasets
 train_df = pd.read_csv('classTrain.csv')
 test_df = pd.read_csv('classTest.csv')
 
 print(f"Train shape: {train_df.shape}")
 print(f"Test shape: {test_df.shape}")
+print(f"\nTarget distribution:\n{train_df['political_affiliation'].value_counts()}")
 ```
 
 ## Preprocessing
 
 ```{python}
-# Identify features and target
+# Define target variable and features
 target = 'political_affiliation'
 features = [c for c in train_df.columns if c not in ['id_num', target]]
 
+# Split into X and y
 X = train_df[features]
 y = train_df[target]
 
-# Identify numeric and categorical columns
-numeric_features = X.select_dtypes(include=['int64', 'float64']).columns
-categorical_features = X.select_dtypes(include=['object']).columns
+# Separate numeric and categorical columns
+numeric_features = X.select_dtypes(include=['int64', 'float64']).columns.tolist()
+categorical_features = X.select_dtypes(include=['object']).columns.tolist()
 
-# Create preprocessing pipeline
-numeric_transformer = Pipeline(steps=[
-    ('imputer', SimpleImputer(strategy='median')),
-    ('scaler', StandardScaler())
-])
+print(f"Numeric features: {len(numeric_features)}")
+print(f"Categorical features: {len(categorical_features)}")
 
-categorical_transformer = Pipeline(steps=[
-    ('imputer', SimpleImputer(strategy='most_frequent')),
-    ('onehot', OneHotEncoder(handle_unknown='ignore'))
-])
+# Numeric preprocessing: standardize to zero mean and unit variance
+numeric_transformer = StandardScaler()
 
+# Categorical preprocessing: one-hot encode, handle unknown categories in test set
+categorical_transformer = OneHotEncoder(handle_unknown='ignore', sparse_output=False)
+
+# Combine transformers into single preprocessor
 preprocessor = ColumnTransformer(
     transformers=[
         ('num', numeric_transformer, numeric_features),
         ('cat', categorical_transformer, categorical_features)
     ])
 
-# Cross-validation strategy
+# Set up 5-fold stratified cross-validation
 cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 ```
 
@@ -70,61 +72,154 @@ cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 ### 1. Linear Discriminant Analysis (LDA)
 
 ```{python}
-lda_pipeline = Pipeline(steps=[('preprocessor', preprocessor),
-                               ('classifier', LinearDiscriminantAnalysis())])
+# Create LDA pipeline with preprocessing
+lda_pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('classifier', LinearDiscriminantAnalysis())
+])
 
-scores_lda = cross_val_score(lda_pipeline, X, y, cv=cv, scoring='accuracy')
-print(f"LDA CV Accuracy: {scores_lda.mean():.4f} (+/- {scores_lda.std():.4f})")
+# Define hyperparameters to tune for LDA
+# Using only lsqr solver to avoid eigen solver errors
+lda_param_grid = {
+    'classifier__solver': ['lsqr'],  # Stable solver that supports shrinkage
+    'classifier__shrinkage': [None, 0.1, 0.3, 0.5, 0.7, 0.9, 'auto']  # Regularization strength
+}
+
+# Perform grid search with cross-validation
+grid_lda = GridSearchCV(lda_pipeline, lda_param_grid, cv=cv, scoring='accuracy', n_jobs=-1)
+grid_lda.fit(X, y)
+
+print(f"Best LDA Params: {grid_lda.best_params_}")
+print(f"Best LDA CV Score: {grid_lda.best_score_:.4f}")
 ```
 
 ### 2. Quadratic Discriminant Analysis (QDA)
 
 ```{python}
-qda_pipeline = Pipeline(steps=[('preprocessor', preprocessor),
-                               ('classifier', QuadraticDiscriminantAnalysis())])
+# QDA needs dimensionality reduction due to covariance matrix estimation
+# Use PCA to reduce features before QDA
+qda_pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('pca', PCA(random_state=42)),  # Dimensionality reduction
+    ('classifier', QuadraticDiscriminantAnalysis())
+])
 
-scores_qda = cross_val_score(qda_pipeline, X, y, cv=cv, scoring='accuracy')
-print(f"QDA CV Accuracy: {scores_qda.mean():.4f} (+/- {scores_qda.std():.4f})")
-```
-
-### 3. Support Vector Classifier (SVC)
-
-```{python}
-svc_pipeline = Pipeline(steps=[('preprocessor', preprocessor),
-                               ('classifier', SVC(class_weight='balanced'))])
-
-# Hyperparameter tuning
-param_grid = {
-    'classifier__C': [0.1, 1, 10, 100],
-    'classifier__gamma': ['scale', 0.1, 0.01],
-    'classifier__kernel': ['rbf', 'linear', 'sigmoid']
+# Tune number of PCA components and QDA regularization
+qda_param_grid = {
+    'pca__n_components': [5, 10, 15, 20],  # Number of principal components
+    'classifier__reg_param': [0.0, 0.1, 0.3, 0.5]  # Regularization parameter
 }
 
-grid_svc = GridSearchCV(svc_pipeline, param_grid, cv=cv, n_jobs=-1)
+# Perform grid search with cross-validation
+grid_qda = GridSearchCV(qda_pipeline, qda_param_grid, cv=cv, scoring='accuracy', n_jobs=-1)
+grid_qda.fit(X, y)
+
+print(f"Best QDA Params: {grid_qda.best_params_}")
+print(f"Best QDA CV Score: {grid_qda.best_score_:.4f}")
+```
+
+### 3. Logistic Regression
+
+```{python}
+# Create Logistic Regression pipeline
+logistic_pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('classifier', LogisticRegression(max_iter=1000, random_state=42))
+])
+
+# Tune regularization strength and penalty type
+logistic_param_grid = {
+    'classifier__C': [0.001, 0.01, 0.1, 1, 10, 100],  # Inverse regularization strength
+    'classifier__penalty': ['l2'],  # L2 (ridge) penalty
+    'classifier__solver': ['lbfgs']  # Solver that supports multinomial
+}
+
+# Perform grid search with cross-validation
+grid_logistic = GridSearchCV(logistic_pipeline, logistic_param_grid, cv=cv, scoring='accuracy', n_jobs=-1)
+grid_logistic.fit(X, y)
+
+print(f"Best Logistic Params: {grid_logistic.best_params_}")
+print(f"Best Logistic CV Score: {grid_logistic.best_score_:.4f}")
+```
+
+### 4. Support Vector Classifier (SVC)
+
+```{python}
+# Create SVC pipeline with balanced class weights
+svc_pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('classifier', SVC(class_weight='balanced', random_state=42))
+])
+
+# Tune regularization, kernel type, and kernel parameters
+svc_param_grid = {
+    'classifier__C': [0.1, 1, 10, 100],  # Regularization parameter
+    'classifier__gamma': ['scale', 'auto', 0.001, 0.01, 0.1],  # Kernel coefficient
+    'classifier__kernel': ['rbf', 'linear', 'poly', 'sigmoid']  # Kernel type
+}
+
+# Perform grid search with cross-validation
+grid_svc = GridSearchCV(svc_pipeline, svc_param_grid, cv=cv, scoring='accuracy', n_jobs=-1)
 grid_svc.fit(X, y)
 
-print("Best SVC Params:", grid_svc.best_params_)
+print(f"Best SVC Params: {grid_svc.best_params_}")
 print(f"Best SVC CV Score: {grid_svc.best_score_:.4f}")
+```
+
+## Model Comparison & Selection
+
+```{python}
+# Store all model results in dictionary
+results = {
+    'LDA': grid_lda.best_score_,
+    'QDA': grid_qda.best_score_,
+    'Logistic Regression': grid_logistic.best_score_,
+    'SVC': grid_svc.best_score_
+}
+
+# Display results sorted by performance
+print("\nModel Performance:")
+for model, score in sorted(results.items(), key=lambda x: x[1], reverse=True):
+    print(f"{model:25s}: {score:.4f}")
+
+# Identify the best performing model
+best_model_name = max(results, key=results.get)
+print(f"\nBest Model: {best_model_name} with accuracy {results[best_model_name]:.4f}")
+
+# Get the best model's GridSearchCV object
+model_map = {
+    'LDA': grid_lda,
+    'QDA': grid_qda,
+    'Logistic Regression': grid_logistic,
+    'SVC': grid_svc
+}
+best_grid = model_map[best_model_name]
 ```
 
 ## Final Prediction
 
 ```{python}
-# Use the best model found
-best_model = grid_svc.best_estimator_
+# Extract the best model (already fitted on full training data by GridSearchCV)
+best_model = best_grid.best_estimator_
 
-# Retrain on full training data (GridSearchCV already does this with refit=True)
-# best_model.fit(X, y) 
-
-# Predict on test data
+# Prepare test features (same columns as training)
 X_test = test_df[features]
+
+# Generate predictions on test set
 test_predictions = best_model.predict(X_test)
 
-# Create submission DataFrame
-submission = pd.DataFrame({'id_num': test_df['id_num'], 'political_affiliation': test_predictions})
+# Display prediction distribution
+print(f"\nPrediction distribution:")
+print(pd.Series(test_predictions).value_counts())
 
-# Save to CSV
+# Create submission dataframe with correct column names
+submission = pd.DataFrame({
+    'id_num': test_df['id_num'], 
+    'political_affiliation_predicted': test_predictions
+})
+
+# Save predictions to CSV file
 submission.to_csv('submission.csv', index=False)
-print("Predictions saved to submission.csv")
-submission.head()
+print("\nPredictions saved to submission.csv")
+print(submission.head(10))
 ```
