@@ -11,6 +11,7 @@ echo: true
 ## Setup
 
 ```{python}
+# Importing libraries
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import GridSearchCV, cross_val_score, StratifiedKFold
@@ -27,6 +28,7 @@ from sklearn.decomposition import PCA
 train_df = pd.read_csv('classTrain.csv')
 test_df = pd.read_csv('classTest.csv')
 
+# Describing the data
 print(f"Train shape: {train_df.shape}")
 print(f"Test shape: {test_df.shape}")
 print(f"\nTarget distribution:\n{train_df['political_affiliation'].value_counts()}")
@@ -36,12 +38,8 @@ print(f"\nTarget distribution:\n{train_df['political_affiliation'].value_counts(
 
 ```{python}
 # Define target variable and features
-target = 'political_affiliation'
-features = [c for c in train_df.columns if c not in ['id_num', target]]
-
-# Split into X and y
-X = train_df[features]
-y = train_df[target]
+y = train_df['political_affiliation']
+X = train_df.drop(['political_affiliation', 'id_num'], axis=1)
 
 # Separate numeric and categorical columns
 numeric_features = X.select_dtypes(include=['int64', 'float64']).columns.tolist()
