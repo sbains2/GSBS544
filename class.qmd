@@ -1,0 +1,130 @@
+---
+title: "GSB 544 - Classification Project"
+author: "Sahil Bains"
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+echo: true
+---
+
+## Setup
+
+```{python}
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score, StratifiedKFold
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, classification_report
+
+# Load data
+train_df = pd.read_csv('classTrain.csv')
+test_df = pd.read_csv('classTest.csv')
+
+print(f"Train shape: {train_df.shape}")
+print(f"Test shape: {test_df.shape}")
+```
+
+## Preprocessing
+
+```{python}
+# Identify features and target
+target = 'political_affiliation'
+features = [c for c in train_df.columns if c not in ['id_num', target]]
+
+X = train_df[features]
+y = train_df[target]
+
+# Identify numeric and categorical columns
+numeric_features = X.select_dtypes(include=['int64', 'float64']).columns
+categorical_features = X.select_dtypes(include=['object']).columns
+
+# Create preprocessing pipeline
+numeric_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='median')),
+    ('scaler', StandardScaler())
+])
+
+categorical_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='most_frequent')),
+    ('onehot', OneHotEncoder(handle_unknown='ignore'))
+])
+
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', numeric_transformer, numeric_features),
+        ('cat', categorical_transformer, categorical_features)
+    ])
+
+# Cross-validation strategy
+cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+```
+
+## Model Training & Evaluation
+
+### 1. Linear Discriminant Analysis (LDA)
+
+```{python}
+lda_pipeline = Pipeline(steps=[('preprocessor', preprocessor),
+                               ('classifier', LinearDiscriminantAnalysis())])
+
+scores_lda = cross_val_score(lda_pipeline, X, y, cv=cv, scoring='accuracy')
+print(f"LDA CV Accuracy: {scores_lda.mean():.4f} (+/- {scores_lda.std():.4f})")
+```
+
+### 2. Quadratic Discriminant Analysis (QDA)
+
+```{python}
+qda_pipeline = Pipeline(steps=[('preprocessor', preprocessor),
+                               ('classifier', QuadraticDiscriminantAnalysis())])
+
+scores_qda = cross_val_score(qda_pipeline, X, y, cv=cv, scoring='accuracy')
+print(f"QDA CV Accuracy: {scores_qda.mean():.4f} (+/- {scores_qda.std():.4f})")
+```
+
+### 3. Support Vector Classifier (SVC)
+
+```{python}
+svc_pipeline = Pipeline(steps=[('preprocessor', preprocessor),
+                               ('classifier', SVC(class_weight='balanced'))])
+
+# Hyperparameter tuning
+param_grid = {
+    'classifier__C': [0.1, 1, 10, 100],
+    'classifier__gamma': ['scale', 0.1, 0.01],
+    'classifier__kernel': ['rbf', 'linear', 'sigmoid']
+}
+
+grid_svc = GridSearchCV(svc_pipeline, param_grid, cv=cv, n_jobs=-1)
+grid_svc.fit(X, y)
+
+print("Best SVC Params:", grid_svc.best_params_)
+print(f"Best SVC CV Score: {grid_svc.best_score_:.4f}")
+```
+
+## Final Prediction
+
+```{python}
+# Use the best model found
+best_model = grid_svc.best_estimator_
+
+# Retrain on full training data (GridSearchCV already does this with refit=True)
+# best_model.fit(X, y) 
+
+# Predict on test data
+X_test = test_df[features]
+test_predictions = best_model.predict(X_test)
+
+# Create submission DataFrame
+submission = pd.DataFrame({'id_num': test_df['id_num'], 'political_affiliation': test_predictions})
+
+# Save to CSV
+submission.to_csv('submission.csv', index=False)
+print("Predictions saved to submission.csv")
+submission.head()
+```
