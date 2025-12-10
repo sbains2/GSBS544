@@ -1,0 +1,561 @@
+---
+title: "GSB 544 - Regression Project"
+author: "Sahil Bains"
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+echo: true
+---
+
+## Setup
+
+```{python}
+# Import required libraries
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import GridSearchCV, KFold
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, PolynomialFeatures
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import Ridge, Lasso, ElasticNet
+from sklearn.metrics import make_scorer, mean_squared_error
+
+# Loading training dataset
+train_df = pd.read_csv("regrs_train.csv")
+
+# Loading test dataset
+test_df = pd.read_csv("regrs_test.csv")
+
+# Print shapes and summary statistics of training dataset
+print(f"Train shape: {train_df.shape}")
+print(f"Test shape: {test_df.shape}")
+print(train_df["SalePrice"].describe())
+```
+
+## Preprocessing
+
+```{python}
+
+# Remove outliers (Gr Liv Area > 4000)
+# These are partial sales or extreme outliers that distort linear models
+train_df = train_df[train_df['Gr Liv Area'] <= 4000]
+
+# Define target variable (Log Transformed) and features
+y = np.log(train_df['SalePrice'])
+X = train_df.drop(['SalePrice', 'PID'], axis=1)
+
+# Identifty numeric columns
+numeric_cols = X.select_dtypes(include=["int64", "float64"]).columns
+
+# Identify categorical columns
+categorical_cols = X.select_dtypes(include=["object"]).columns
+
+# --- A+ BOOST PLAN: 1. Log-transform skewed features ---
+skewed_cols = ["Lot Area", "Gr Liv Area", "TotRms AbvGrd"]
+# Check if columns exist before transforming (robustness)
+existing_skewed = [col for col in skewed_cols if col in X.columns]
+for col in existing_skewed:
+    # Use log1p to handle zeros safely
+    X[col] = np.log1p(X[col])
+
+# Fill numeric missing values with median
+X[numeric_cols] = X[numeric_cols].fillna(X[numeric_cols].median())
+
+# --- A+ BOOST PLAN: 2. Collapse rare categorical levels ---
+def collapse_rare(series, threshold=10):
+    counts = series.value_counts()
+    rare = counts[counts < threshold].index
+    if len(rare) > 0:
+        return series.replace(rare, "Other")
+    return series
+
+for col in categorical_cols:
+    # Fill missing first
+    X[col] = X[col].fillna(X[col].mode()[0])
+    # Collapse rare
+    X[col] = collapse_rare(X[col])
+
+# Store numeric feature list
+numeric_features = list(numeric_cols)
+
+# Store categorical feature list
+categorical_features = list(categorical_cols)
+
+# Build preprocessing pipeline
+preprocessor = ColumnTransformer(
+    transformers=[
+        ("num", StandardScaler(), numeric_features),
+        ("cat", OneHotEncoder(handle_unknown='ignore', sparse_output=False), categorical_features),
+    ]
+)
+
+# Define 5-fold cross-validation
+cv = KFold(n_splits=5, shuffle=True, random_state=42)
+
+# Define RMSE scorer in order to return positive RMSE values
+def rmse_scorer(y_true, y_pred):
+    # Return negative RMSE
+    return -np.sqrt(mean_squared_error(y_true, y_pred))
+
+# Wrap custom scorer - defining 'smallest' rmse as best
+scorer = make_scorer(rmse_scorer, greater_is_better=True)
+```
+
+## Model Training & Evaluation
+
+### 1. Linear Regression (Baseline)
+
+```{python}
+# Create Linear Regression pipeline
+lr_pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('regressor', LinearRegression())
+])
+
+# Fit model
+lr_pipeline.fit(X, y)
+
+# Evaluate with cross-validation using log RMSE
+from sklearn.model_selection import cross_val_score
+lr_scores = cross_val_score(lr_pipeline, X, y, cv=cv, scoring=scorer)
+lr_score = -lr_scores.mean()  # Convert back to positive RMSE
+
+print(f"Linear Regression CV RMSE (log): {lr_score:.4f}")
+```
+
+### 2. Ridge Regression
+
+```{python}
+# Create Ridge pipeline
+ridge_pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('regressor', Ridge())
+])
+
+# Tune regularization strength
+ridge_param_grid = {
+    'regressor__alpha': [0.01, 0.1, 0.5, 1, 5, 10, 50, 100]  # Regularization parameter
+}
+
+# Perform grid search with cross-validation
+grid_ridge = GridSearchCV(ridge_pipeline, ridge_param_grid, cv=cv, 
+                          scoring=scorer, n_jobs=-1)
+grid_ridge.fit(X, y)
+
+ridge_score = -grid_ridge.best_score_  # Convert to positive RMSE
+print(f"Best Ridge Params: {grid_ridge.best_params_}")
+print(f"Ridge CV RMSE (log): {ridge_score:.4f}")
+```
+
+### 3. Lasso Regression
+
+```{python}
+# Create Lasso pipeline
+lasso_pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('regressor', Lasso(max_iter=10000))
+])
+
+# Tune regularization strength
+lasso_param_grid = {
+    'regressor__alpha': [0.00001, 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]  # Regularization parameter
+}
+
+# Perform grid search with cross-validation
+grid_lasso = GridSearchCV(lasso_pipeline, lasso_param_grid, cv=cv, 
+                          scoring=scorer, n_jobs=-1)
+grid_lasso.fit(X, y)
+
+lasso_score = -grid_lasso.best_score_  # Convert to positive RMSE
+print(f"Best Lasso Params: {grid_lasso.best_params_}")
+print(f"Lasso CV RMSE (log): {lasso_score:.4f}")
+```
+
+### 4. Elastic Net
+
+```{python}
+# Create Elastic Net pipeline
+elasticnet_pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('regressor', ElasticNet(max_iter=10000))
+])
+
+# Tuned for log scale target
+elasticnet_param_grid = {
+    'regressor__alpha': [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05],
+    'regressor__l1_ratio': [0.1, 0.3, 0.5, 0.7, 0.9, 0.95]  # Mix between L1 and L2
+}
+
+# Perform grid search with cross-validation
+grid_elasticnet = GridSearchCV(elasticnet_pipeline, elasticnet_param_grid, cv=cv, 
+                               scoring=scorer, n_jobs=-1)
+grid_elasticnet.fit(X, y)
+
+elasticnet_score = -grid_elasticnet.best_score_  # Convert to positive RMSE
+print(f"Best Elastic Net Params: {grid_elasticnet.best_params_}")
+print(f"Elastic Net CV RMSE (log): {elasticnet_score:.4f}")
+```
+
+### 5. Polynomial Features with Ridge
+
+```{python}
+# Create Polynomial + Ridge pipeline with interaction_only for speed
+poly_ridge_pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('poly', PolynomialFeatures(degree=2, interaction_only=True, include_bias=False)),
+    ('regressor', Ridge())
+])
+
+# Define Ridge hyperparameters - A+ Boost Plan Refinement
+poly_ridge_params = {"regressor__alpha": [60, 80, 100, 120, 140]}
+
+# Run grid search on Polynomial Ridge
+grid_poly_ridge = GridSearchCV(poly_ridge_pipeline, poly_ridge_params, cv=cv, scoring=scorer, n_jobs=-1)
+
+# Fit Polynomial Ridge model
+grid_poly_ridge.fit(X, y)
+
+# Store RMSE score
+poly_ridge_score = -grid_poly_ridge.best_score_
+
+# Print results
+print("Polynomial Ridge (interactions) RMSE:", round(poly_ridge_score, 4))
+print("Best params:", grid_poly_ridge.best_params_)
+```
+
+### 1b. Polynomial Ridge (Degree 3, Interactions Only)
+
+```{python}
+# Build Poly(3) + Ridge pipeline
+poly3_ridge_pipeline = Pipeline(
+    steps=[
+        ("preprocessor", preprocessor),
+        ("poly", PolynomialFeatures(degree=3, interaction_only=True, include_bias=False)),
+        ("regressor", Ridge()),
+    ]
+)
+
+# Higher alphas for degree 3
+poly3_ridge_params = {"regressor__alpha": [50, 100, 200, 300, 400, 500, 800]}
+
+# Run grid search
+grid_poly3_ridge = GridSearchCV(
+    poly3_ridge_pipeline, poly3_ridge_params, cv=cv, scoring=scorer, n_jobs=-1
+)
+
+# Fit model
+grid_poly3_ridge.fit(X, y)
+
+# Store RMSE score
+poly3_ridge_score = -grid_poly3_ridge.best_score_
+
+# Print results
+print("Polynomial Ridge (Deg 3, Int Only) RMSE:", round(poly3_ridge_score, 4))
+print("Best params:", grid_poly3_ridge.best_params_)
+```
+
+### 5b. Polynomial Ridge Variant - Different Alpha Range
+
+```{python}
+# Create full Polynomial + Ridge pipeline
+poly_full_ridge_pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('poly', PolynomialFeatures(include_bias=False)),
+    ('regressor', Ridge())
+])
+
+# Tune regularization - need higher alpha for more features
+poly_full_ridge_param_grid = {
+    'poly__degree': [2],
+    'poly__interaction_only': [False], # Try both later if needed, but stick to full for now
+    'regressor__alpha': [0.1, 1, 10, 50, 100, 200, 500, 1000] 
+}
+
+# Perform grid search with cross-validation
+grid_poly_full_ridge = GridSearchCV(poly_full_ridge_pipeline, poly_full_ridge_param_grid, cv=cv, 
+                                    scoring=scorer, n_jobs=-1)
+grid_poly_full_ridge.fit(X, y)
+
+poly_full_ridge_score = -grid_poly_full_ridge.best_score_  # Convert to positive RMSE
+print(f"Best Polynomial Full Ridge Params: {grid_poly_full_ridge.best_params_}")
+print(f"Polynomial Full Ridge CV RMSE (log): {poly_full_ridge_score:.4f}")
+```
+
+### 5c. Polynomial Ridge - Degree 2 Full Features
+
+```{python}
+# Try full polynomial (not just interactions) with strong regularization
+poly_ridge3_pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('poly', PolynomialFeatures(degree=2, interaction_only=False, include_bias=False)),
+    ('regressor', Ridge())
+])
+
+# Higher alphas for more features - reduced range for speed
+poly_ridge3_param_grid = {
+    'regressor__alpha': [100, 300, 500, 800, 1000, 1500]  # Reduced from previous
+}
+
+# Perform grid search with cross-validation
+grid_poly_ridge3 = GridSearchCV(poly_ridge3_pipeline, poly_ridge3_param_grid, cv=cv, 
+                                scoring=scorer, n_jobs=-1)
+grid_poly_ridge3.fit(X, y)
+
+poly_ridge3_score = -grid_poly_ridge3.best_score_  # Convert to positive RMSE
+print(f"Best Polynomial Ridge 3 Params: {grid_poly_ridge3.best_params_}")
+print(f"Polynomial Ridge 3 CV RMSE (log): {poly_ridge3_score:.4f}")
+```
+
+
+
+### 7. Ridge Regression (More Tuning)
+
+```{python}
+# Create Ridge pipeline - focus on very small alphas
+ridge2_pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('regressor', Ridge())
+])
+
+# More granular alpha search (log scale target)
+ridge2_param_grid = {
+    'regressor__alpha': [0.1, 0.5, 1, 2, 3, 5, 8, 10, 15, 20, 50]
+}
+
+# Perform grid search with cross-validation
+grid_ridge2 = GridSearchCV(ridge2_pipeline, ridge2_param_grid, cv=cv, 
+                           scoring=scorer, n_jobs=-1)
+grid_ridge2.fit(X, y)
+
+ridge2_score = -grid_ridge2.best_score_  # Convert to positive RMSE
+print(f"Best Ridge (Extended) Params: {grid_ridge2.best_params_}")
+print(f"Ridge (Extended) CV RMSE (log): {ridge2_score:.4f}")
+```
+
+### 7b. Ridge Regression - Very Small Alphas
+
+```{python}
+# Create Ridge pipeline focusing on minimal regularization
+ridge3_pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('regressor', Ridge())
+])
+
+# Very small alphas
+ridge3_param_grid = {
+    'regressor__alpha': [0.00001, 0.0001, 0.0005, 0.001, 0.005, 0.01]
+}
+
+# Perform grid search with cross-validation
+grid_ridge3 = GridSearchCV(ridge3_pipeline, ridge3_param_grid, cv=cv, 
+                           scoring=scorer, n_jobs=-1)
+grid_ridge3.fit(X, y)
+
+ridge3_score = -grid_ridge3.best_score_  # Convert to positive RMSE
+print(f"Best Ridge (Minimal Reg) Params: {grid_ridge3.best_params_}")
+print(f"Ridge (Minimal Reg) CV RMSE (log): {ridge3_score:.4f}")
+```
+
+### 8. Lasso Regression (More Tuning)
+
+```{python}
+# Create Lasso pipeline with extended tuning
+lasso2_pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('regressor', Lasso(max_iter=10000))
+])
+
+# More granular alpha search (log scale target)
+lasso2_param_grid = {
+    'regressor__alpha': [0.00001, 0.00005, 0.0001, 0.0002, 0.0005, 0.001, 0.005, 0.01]
+}
+
+# Perform grid search with cross-validation
+grid_lasso2 = GridSearchCV(lasso2_pipeline, lasso2_param_grid, cv=cv, 
+                           scoring=scorer, n_jobs=-1)
+grid_lasso2.fit(X, y)
+
+lasso2_score = -grid_lasso2.best_score_  # Convert to positive RMSE
+print(f"Best Lasso (Extended) Params: {grid_lasso2.best_params_}")
+print(f"Lasso (Extended) CV RMSE (log): {lasso2_score:.4f}")
+```
+
+### 9. Elastic Net (More Tuning)
+
+```{python}
+# Create Elastic Net pipeline - reduced search space
+elasticnet2_pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('regressor', ElasticNet(max_iter=10000))
+])
+
+# Reduced combinations for speed
+elasticnet2_param_grid = {
+    'regressor__alpha': [0.00000001, 0.0000001, 0.000001, 0.00001],  # Reduced from 7 to 4
+    'regressor__l1_ratio': [0.1, 0.3, 0.5, 0.7, 0.9]  # Reduced from 10 to 5
+}
+
+# Perform grid search with cross-validation
+grid_elasticnet2 = GridSearchCV(elasticnet2_pipeline, elasticnet2_param_grid, cv=cv, 
+                                scoring=scorer, n_jobs=-1)
+grid_elasticnet2.fit(X, y)
+
+elasticnet2_score = -grid_elasticnet2.best_score_  # Convert to positive RMSE
+print(f"Best Elastic Net (Extended) Params: {grid_elasticnet2.best_params_}")
+print(f"Elastic Net (Extended) CV RMSE (log): {elasticnet2_score:.4f}")
+```
+
+### 10. Elastic Net with Polynomial Interactions
+
+```{python}
+# Create Polynomial + Elastic Net pipeline
+poly_elasticnet_pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('poly', PolynomialFeatures(degree=2, interaction_only=True, include_bias=False)),
+    ('regressor', ElasticNet(max_iter=10000))
+])
+
+# Tune for polynomial features - higher alpha needed
+poly_elasticnet_param_grid = {
+    'regressor__alpha': [0.001, 0.01, 0.1, 1, 10, 50, 100],
+    'regressor__l1_ratio': [0.1, 0.5, 0.7, 0.9, 0.95, 0.99]
+}
+
+# Perform grid search with cross-validation
+grid_poly_elasticnet = GridSearchCV(poly_elasticnet_pipeline, poly_elasticnet_param_grid, cv=cv, 
+                                    scoring=scorer, n_jobs=-1)
+grid_poly_elasticnet.fit(X, y)
+
+poly_elasticnet_score = -grid_poly_elasticnet.best_score_  # Convert to positive RMSE
+print(f"Best Poly Elastic Net Params: {grid_poly_elasticnet.best_params_}")
+print(f"Poly Elastic Net CV RMSE (log): {poly_elasticnet_score:.4f}")
+```
+
+### 11. Polynomial Lasso (Interactions Only)
+
+```{python}
+# Create Polynomial + Lasso pipeline
+poly_lasso_pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('poly', PolynomialFeatures(degree=2, interaction_only=True, include_bias=False)),
+    ('regressor', Lasso(max_iter=10000))
+])
+
+# Tune alpha for Lasso with polynomial features
+poly_lasso_param_grid = {
+    'regressor__alpha': [0.00001, 0.00005, 0.0001, 0.0005, 0.001, 0.005, 0.01]
+}
+
+# Perform grid search with cross-validation
+grid_poly_lasso = GridSearchCV(poly_lasso_pipeline, poly_lasso_param_grid, cv=cv, 
+                               scoring=scorer, n_jobs=-1)
+grid_poly_lasso.fit(X, y)
+
+poly_lasso_score = -grid_poly_lasso.best_score_  # Convert to positive RMSE
+print(f"Best Poly Lasso Params: {grid_poly_lasso.best_params_}")
+print(f"Poly Lasso CV RMSE (log): {poly_lasso_score:.4f}")
+```
+
+## Model Comparison & Selection
+
+```{python}
+results = {
+    "Polynomial Ridge (interactions)": poly_ridge_score,
+    "Poly Elastic Net": poly_elasticnet_score,
+    "Poly Lasso": poly_lasso_score,
+    "Poly Ridge (Deg 3, Int Only)": poly3_ridge_score
+}
+
+# Print sorted performance table
+print("\nModel Performance (RMSE):")
+for model, score in sorted(results.items(), key=lambda x: x[1]):
+    print(f"{model:30s}: {score:.4f}")
+
+# Select best model name
+best_model_name = min(results, key=results.get)
+print("\nBest model:", best_model_name)
+
+# Map model name to fitted estimator
+model_map = {
+    "Polynomial Ridge (interactions)": grid_poly_ridge.best_estimator_,
+    "Poly Elastic Net": grid_poly_elasticnet.best_estimator_,
+    "Poly Lasso": grid_poly_lasso.best_estimator_,
+    "Poly Ridge (Deg 3, Int Only)": grid_poly3_ridge.best_estimator_
+}
+
+# Retrieve best model
+best_model = model_map[best_model_name]
+```
+
+```{python}
+# ---------------------------------------------------------
+# MODEL SCORE DIAGNOSTICS — PRINT ALL SCORES CLEANLY
+# ---------------------------------------------------------
+
+print("\n================ MODEL SCORES (RMSE, LOWER = BETTER) ================\n")
+
+for model, score in sorted(results.items(), key=lambda x: x[1]):
+    print(f"{model:35s}: {score:.5f}")
+
+print("\n=====================================================================\n")
+
+# Print best model selected
+print(f"BEST MODEL SELECTED FOR SUBMISSION: {best_model_name}")
+print(f"BEST MODEL RMSE: {results[best_model_name]:.5f}")
+
+# Safety check: ensure the best_model object exists and is correct
+print("\nBEST MODEL OBJECT TYPE:", type(best_model))
+
+```
+
+```{python}
+print("Best CV RMSE:", results[best_model_name])
+
+train_pred = best_model.predict(X)
+train_rmse = np.sqrt(mean_squared_error(y, train_pred))
+print("Training RMSE:", train_rmse)
+
+```
+
+## Final Predictions
+
+```{python}
+# Retrain best model on full dataset
+best_model.fit(X, y)
+
+# Prepare test dataset (drop PID)
+X_test = test_df.drop(["PID"], axis=1)
+
+# --- A+ BOOST PLAN: Apply Same Preprocessing to Test Set ---
+# Log transform test features
+existing_skewed_test = [col for col in skewed_cols if col in X_test.columns]
+for col in existing_skewed_test:
+    X_test[col] = np.log1p(X_test[col])
+
+# Fill numeric missing values with median
+X_test[numeric_cols] = X_test[numeric_cols].fillna(X_test[numeric_cols].median())
+
+# Fill categorical missing values
+for col in categorical_cols:
+    X_test[col] = X_test[col].fillna(X_test[col].mode()[0])
+    # Apply collapse rare categories
+    X_test[col] = collapse_rare(X_test[col])
+
+# Predict log-sale price
+test_pred_log = best_model.predict(X_test)
+
+# Convert back to original scale
+test_pred = np.exp(test_pred_log)
+
+# Build submission file
+submission = pd.DataFrame({"PID": test_df["PID"], "SalePrice": test_pred})
+
+# Save submission file
+submission.to_csv("submissionr.csv", index=False)
+
+# Show preview
+print(submission.head())
+
+# Confirm save
+print("Saved to submissionr.csv")
