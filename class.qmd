@@ -8,6 +8,8 @@ format:
 echo: true
 ---
 
+This script applies four classification models covered in GSB 544 (Linear Discriminant Analysis, Quadratic Discriminant Analysis, Multinomial Logistic Regression, and Support Vector Classification) to the Cards Against Humanity political affiliation data. External (AI) assistance was employed for optimization settings, formatting the confusion matrix plot, extracting the most important predictors, and the code that saves test predictions to a CSV file. 
+
 ## Setup
 
 ```{python}
@@ -42,6 +44,8 @@ print(f"\nTarget distribution:\n{train_df['political_affiliation'].value_counts(
 # Define target variable and features
 y = train_df['political_affiliation']
 X = train_df.drop(['political_affiliation', 'id_num'], axis=1)
+
+features = X.columns.tolist()
 
 # Separate numeric and categorical columns
 numeric_features = X.select_dtypes(include=['int64', 'float64']).columns.tolist()
@@ -148,9 +152,13 @@ svc_pipeline = Pipeline(steps=[
 
 # Tune regularization, kernel type, and kernel parameters
 svc_param_grid = {
-    'classifier__C': [0.1, 1, 10, 100],  # Regularization parameter
-    'classifier__gamma': ['scale', 'auto', 0.001, 0.01, 0.1],  # Kernel coefficient
-    'classifier__kernel': ['rbf', 'linear', 'poly', 'sigmoid']  # Kernel type
+    # For different values of regularization strength
+    'classifier__C': [0.1, 1, 10, 100],
+    # For determining how far the influence for each training point reaches
+    # Using fixed values to stress test more complex vs. smoother boundaries
+    'classifier__gamma': ['scale', 'auto', 0.001, 0.01, 0.1],
+    # Using kernels to determine the best shape for the decision boundary
+    'classifier__kernel': ['rbf', 'linear', 'poly', 'sigmoid']
 }
 
 # Perform grid search with cross-validation
@@ -171,13 +179,11 @@ prec_republican = precision_score(y, y_pred_svc, labels=['Republican'], average=
 print(f"Best SVC Precision (Republican): {prec_republican:.4f}")
 
 # Output Confusion Matrix
-# Output Confusion Matrix
 cm = confusion_matrix(y, y_pred_svc, labels=grid_svc.classes_)
 disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=grid_svc.classes_)
-
 disp.plot(cmap='plasma')
 
-# Updated title for dashboard use
+# Defining title for dashboard
 plt.title("Model Reliability Across Voter Segments")
 
 plt.show()
