@@ -8,7 +8,7 @@ format:
 echo: true
 ---
 
-This script applies several regularized polynomial regression models covered in GSB 544 - Ridge, Lasso, and Elastic Net with polynomial feature expansion to the Ames housing dataset. External Assistance (AI) was used for preprocess design, tuning hyperparameters for model optimization, organizing diagnostics, and saving predictions in the required format.
+This script applies several regularized polynomial regression models covered in GSB 544 - Ridge, Lasso, and Elastic Net with polynomial feature expansion to the Ames housing dataset. External Assistance (AI) was used for preprocess design, tuning hyperparameters for model optimization, organizing diagnostics, plotting, and saving predictions in the required format.
 
 
 ## Setup
