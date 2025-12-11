@@ -515,7 +515,108 @@ print("Best CV RMSE:", results[best_model_name])
 train_pred = best_model.predict(X)
 train_rmse = np.sqrt(mean_squared_error(y, train_pred))
 print("Training RMSE:", train_rmse)
+```
 
+## Practical Model Accuracy (Diagnostics)
+
+```{python}
+from sklearn.model_selection import cross_val_predict
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+import numpy as np
+
+# ----- CV predictions on original (un-logged) scale -----
+y_pred_cv_log = cross_val_predict(best_model, X, y, cv=cv, n_jobs=-1)
+y_pred_cv_real = np.exp(y_pred_cv_log)
+y_real = np.exp(y)
+
+# Practical accuracy diagnostics
+mae = np.mean(np.abs(y_real - y_pred_cv_real))
+pct_error = np.abs(y_real - y_pred_cv_real) / y_real
+acc_10 = (pct_error <= 0.10).mean() * 100
+acc_20 = (pct_error <= 0.20).mean() * 100
+
+print("\n--- PRACTICAL ACCURACY DIAGNOSTICS (CV) ---")
+print(f"Mean Absolute Error: ${mae:,.2f}")
+print(f"Predictions within 10% of actual: {acc_10:.1f}%")
+print(f"Predictions within 20% of actual: {acc_20:.1f}%")
+print("-------------------------------------------")
+
+# ----- Minimal, clean Predicted vs Actual plot -----
+fig, ax = plt.subplots(figsize=(8, 5))
+
+# Scatter points: smaller, softer, more transparent
+ax.scatter(
+    y_real,
+    y_pred_cv_real,
+    alpha=0.3,
+    color="#5c6c7f",
+    s=12,
+    edgecolors="none"
+)
+
+# Perfect prediction line (diagonal), thin and subtle
+min_val = min(y_real.min(), y_pred_cv_real.min())
+max_val = max(y_real.max(), y_pred_cv_real.max())
+ax.plot(
+    [min_val, max_val],
+    [min_val, max_val],
+    linestyle="--",
+    color="#e85b5b",
+    linewidth=1.2
+)
+
+# Keep axes tight around the data
+ax.set_xlim(min_val, max_val)
+ax.set_ylim(min_val, max_val)
+
+# Dollar formatting for both axes, with fewer ticks
+formatter = ticker.FuncFormatter(lambda x, p: f'${x/1000:.0f}k')
+ax.xaxis.set_major_formatter(formatter)
+ax.yaxis.set_major_formatter(formatter)
+ax.xaxis.set_major_locator(ticker.MaxNLocator(5))
+ax.yaxis.set_major_locator(ticker.MaxNLocator(5))
+
+# Labels & title
+ax.set_xlabel("Actual Sale Price", fontsize=11)
+ax.set_ylabel("Predicted Sale Price", fontsize=11)
+ax.set_title("Predicted vs Actual Prices", fontsize=12, pad=10)
+
+# Very light grid & clean spines
+ax.grid(True, axis="both", linestyle="--", alpha=0.15)
+for spine in ["top", "right"]:
+    ax.spines[spine].set_visible(False)
+for spine in ax.spines.values():
+    spine.set_visible(False)
+
+plt.tight_layout(pad=2)
+
+
+plt.tight_layout()
+plt.show()
+
+## Key Predictors in Best Model
+
+```{python}
+# Fit model to get coefficients
+best_model.fit(X, y)
+
+# Extract feature names from pipeline (Preprocessor -> Poly)
+feature_names = best_model[:-1].get_feature_names_out()
+
+# Get coefficients
+coefs = best_model.named_steps['regressor'].coef_
+
+# Create DataFrame
+imp_df = pd.DataFrame({'Feature': feature_names, 'Coefficient': coefs})
+imp_df['Abs_Coeff'] = imp_df['Coefficient'].abs()
+
+# Sort and Display Top 10
+top_features = imp_df.sort_values(by='Abs_Coeff', ascending=False).head(10)
+
+print("\n--- TOP 10 SIGNIFICANT PREDICTORS (Poly Ridge) ---")
+print(top_features[['Feature', 'Coefficient']])
+print("--------------------------------------------------")
 ```
 
 ## Final Predictions
